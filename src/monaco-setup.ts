@@ -1,4 +1,10 @@
 import * as monaco from "monaco-editor";
+// monaco 0.56 exposes the TS language service config as a NAMED EXPORT — the
+// legacy monaco.languages.typescript namespace only exists through the old
+// editor.main entry, which dev's prebundle resolves but the production build
+// does not (that mismatch shipped a crash once; see git history). Import the
+// value directly so both pipelines agree and the eager side effect survives.
+import { typescriptDefaults } from "monaco-editor/language/typescript/monaco.contribution.js";
 // Paths go through monaco's exports map ("./*.js" -> "./esm/vs/*.js"),
 // so the esm/vs prefix must be omitted or build-time resolution fails.
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
@@ -14,7 +20,7 @@ self.MonacoEnvironment = {
 // WhyType's own engine is the single source of truth for semantics —
 // Monaco's built-in checker would disagree (different TS version) and paint
 // duplicate squiggles, so it is limited to syntax.
-monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+typescriptDefaults.setDiagnosticsOptions({
   noSemanticValidation: true,
   noSyntaxValidation: true,
 });
