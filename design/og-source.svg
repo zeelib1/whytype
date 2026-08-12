@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0e1116"/>
+  <!-- soft glow echoing the app's explain-pane gradient -->
+  <ellipse cx="840" cy="-40" rx="560" ry="300" fill="#16202b"/>
+
+  <!-- wordmark -->
+  <text x="80" y="150" font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+        font-size="96" fill="#5cc8ff">Why</text>
+  <text x="268" y="150" font-family="Menlo, monospace" font-size="88" font-weight="bold"
+        fill="#dee7f0">Type</text>
+  <text x="82" y="205" font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+        font-size="34" fill="#77828f">the compiler, explaining itself</text>
+
+  <!-- stylized because-chain -->
+  <g font-family="Menlo, monospace" font-size="24">
+    <rect x="80" y="270" width="1040" height="64" rx="12" fill="#1c232c" stroke="#232b36"/>
+    <text x="104" y="310" fill="#dee7f0">Type '<tspan fill="#ffa366">{ tls: { key: number } }</tspan>' is not assignable to type '<tspan fill="#5cc8ff">Config</tspan>'</text>
+
+    <line x1="120" y1="334" x2="120" y2="374" stroke="#3a4552" stroke-width="2"/>
+    <text x="140" y="366" font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+          font-size="28" fill="#77828f">because</text>
+
+    <rect x="80" y="382" width="1040" height="64" rx="12" fill="#1c232c" stroke="#232b36"/>
+    <text x="104" y="422" fill="#dee7f0">the types of '<tspan fill="#dee7f0" font-weight="bold">server.tls.key</tspan>' are incompatible</text>
+
+    <line x1="120" y1="446" x2="120" y2="486" stroke="#3a4552" stroke-width="2"/>
+    <text x="140" y="478" font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+          font-size="28" fill="#77828f">because</text>
+
+    <rect x="80" y="494" width="1040" height="64" rx="12" fill="#1c232c" stroke="#232b36"/>
+    <text x="104" y="534" fill="#dee7f0">type '<tspan fill="#ffa366">number</tspan>' is not assignable to type '<tspan fill="#5cc8ff">string</tspan>'</text>
+  </g>
+
+  <!-- legend -->
+  <g font-family="Menlo, monospace" font-size="20" fill="#77828f">
+    <rect x="80" y="586" width="14" height="14" rx="4" fill="#ffa366"/>
+    <text x="104" y="599">what you gave it</text>
+    <rect x="330" y="586" width="14" height="14" rx="4" fill="#5cc8ff"/>
+    <text x="354" y="599">what it expects</text>
+  </g>
+</svg>

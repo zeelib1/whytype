@@ -102,12 +102,12 @@ add to the gallery next?" (comment bait that's actually useful roadmap input.)
 ## 5. Remaining build work before flipping public
 
 - [x] Rename (see §0) — repo, worker, extension manifest, wordmark, docs
-- [ ] LICENSE (MIT, Zee's name) + README badges/screenshots
-- [ ] OG/social meta tags + og-image (screenshot of because-chain)
-- [ ] Favicon/logo mark
-- [ ] `@whytype/core` npm package skeleton (engine is already injected/isolated;
+- [x] LICENSE (MIT, Zee's name) + README badges/screenshots
+- [x] OG/social meta tags + og-image (screenshot of because-chain)
+- [x] Favicon/logo mark
+- [x] `@whytype/core` npm package skeleton (engine is already injected/isolated;
       needs package.json, exports map, build step, README) — publish at launch
-- [ ] Extension: icon, README with GIF, `vsce package`, publisher account —
+- [x] Extension: icon, README (GIF TODO), `vsce package`, publisher account —
       publish at launch
 - [ ] Custom domain on the Worker once name is chosen
 - [ ] Analytics decision: Cloudflare Web Analytics (cookieless) or none —

@@ -1,0 +1,36 @@
+{
+  "name": "@whytype/core",
+  "version": "0.0.1",
+  "description": "Extract the TypeScript compiler's reasoning: diagnostics as explain-trees, generic inference bindings, and conditional-type traces with real checker verdicts.",
+  "license": "MIT",
+  "author": "Zvonimir Damjanović",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeelib1/whytype",
+    "directory": "core"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0 <7"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

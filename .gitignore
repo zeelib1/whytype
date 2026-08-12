@@ -3,3 +3,4 @@ dist/
 engine/libs/
 *.log
 .DS_Store
+*.vsix
