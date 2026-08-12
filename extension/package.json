@@ -1,0 +1,39 @@
+{
+  "name": "typelens-vscode",
+  "displayName": "TypeLens",
+  "description": "The compiler, explaining itself — a visual 'why' for TypeScript errors.",
+  "version": "0.0.1",
+  "publisher": "zeelib",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "typelens.why",
+        "title": "TypeLens: Why does this fail?"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "test": "tsx src/parseChain.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0"
+  }
+}
