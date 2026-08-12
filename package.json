@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "postinstall": "node scripts/copy-libs.mjs"
+    "postinstall": "node scripts/copy-libs.mjs",
+    "deploy": "vite build && wrangler deploy"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +25,8 @@
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "typescript-strada": "npm:typescript@^6.0.3",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "wrangler": "^4.121.0"
   },
   "dependencies": {
     "lz-string": "^1.5.0"
