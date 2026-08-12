@@ -1,0 +1,423 @@
+/* TypeLens — dark-only by design (a lens is used in the dark).
+   Semantic pair carries the product: expected = cool sky, actual = warm apricot. */
+
+:root {
+  --bg: #0e1116;
+  --surface: #151a21;
+  --surface-2: #1c232c;
+  --line: #232b36;
+  --text: #dee7f0;
+  --muted: #77828f;
+  --faint: #3a4552;
+  --expected: #5cc8ff;
+  --actual: #ffa366;
+  --error: #ff6b7a;
+  --param: #9d8cff;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --serif: "Newsreader", Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── masthead ─────────────────────────────────────────────────────────── */
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 22px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wordmark {
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.wordmark-lens {
+  color: var(--expected);
+}
+
+.tagline {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--muted);
+  flex: 1;
+}
+
+.share-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--expected);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+
+.share-btn:hover {
+  border-color: var(--expected);
+}
+
+/* ── layout ───────────────────────────────────────────────────────────── */
+
+.split {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+  min-height: 0;
+}
+
+.pane-editor {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+
+.pane-explain {
+  min-width: 0;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse 80% 50% at 70% -10%, #16202b 0%, transparent 60%),
+    var(--surface);
+}
+
+@media (max-width: 860px) {
+  .split {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .pane-editor {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* ── diagnostics list ─────────────────────────────────────────────────── */
+
+.explain {
+  padding: 20px 24px 32px;
+}
+
+.diag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.diag-tab {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+
+.diag-tab:hover {
+  border-color: var(--faint);
+  color: var(--text);
+}
+
+.diag-tab.is-active {
+  border-color: var(--error);
+  color: var(--text);
+}
+
+.diag-tab-code {
+  color: var(--error);
+}
+
+/* ── the ask + because-chain (signature element) ──────────────────────── */
+
+.ask {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: 0.005em;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.chain-node {
+  animation: settle 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chain-node,
+  .binding {
+    animation: none !important;
+  }
+}
+
+.because {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--muted);
+  padding: 10px 0 10px 22px;
+  position: relative;
+}
+
+.because::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--faint);
+}
+
+.chain-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.chain-code {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.chain-message {
+  margin-top: 4px;
+  overflow-wrap: break-word;
+}
+
+.chain-message code,
+.inspect-expr code,
+.inspect-type code,
+.binding code {
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+}
+
+.t-actual {
+  color: var(--actual);
+  background: color-mix(in srgb, var(--actual) 10%, transparent);
+}
+
+.t-expected {
+  color: var(--expected);
+  background: color-mix(in srgb, var(--expected) 10%, transparent);
+}
+
+.t-path {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.t-param {
+  color: var(--param);
+  background: color-mix(in srgb, var(--param) 10%, transparent);
+}
+
+/* ── related + legend ─────────────────────────────────────────────────── */
+
+.related {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+
+.related-item {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 26px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+.swatch-actual {
+  background: var(--actual);
+}
+
+.swatch-expected {
+  background: var(--expected);
+}
+
+/* ── inspection ───────────────────────────────────────────────────────── */
+
+.inspect-expr {
+  font-size: 13px;
+}
+
+.inspect-type {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.binding {
+  animation: settle 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  margin: 2px 0;
+}
+
+.binding-walrus {
+  color: var(--muted);
+}
+
+.binding-signature {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* ── conditional trace ────────────────────────────────────────────────── */
+
+.step-declared {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.step-resolved {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.step-kw {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.verdict {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.verdict-true {
+  color: #7ce0a3;
+}
+
+.verdict-false {
+  color: var(--error);
+}
+
+.verdict-both,
+.verdict-distributes {
+  color: var(--param);
+}
+
+.members {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--faint);
+}
+
+.member {
+  animation: settle 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  margin: 3px 0;
+  font-size: 13px;
+}
+
+.member-verdict {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .member {
+    animation: none !important;
+  }
+}
+
+/* ── empty state ──────────────────────────────────────────────────────── */
+
+.explain-empty p {
+  color: var(--muted);
+  max-width: 44ch;
+}
+
+/* ── status bar ───────────────────────────────────────────────────────── */
+
+.statusbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 22px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.statusbar strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.status-errors {
+  color: var(--error);
+}
+
+.status-clean {
+  color: #7ce0a3;
+}
+
+/* ── a11y ─────────────────────────────────────────────────────────────── */
+
+button:focus-visible {
+  outline: 2px solid var(--expected);
+  outline-offset: 2px;
+}
