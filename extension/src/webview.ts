@@ -1,7 +1,7 @@
 /**
  * Static HTML for the "Why?" panel — the playground's because-chain visual
  * language, adapted to live inside a VS Code webview. No scripts, CSP locked
- * down; VS Code theme variables carry the chrome, TypeLens's semantic pair
+ * down; VS Code theme variables carry the chrome, WhyType's semantic pair
  * (expected = cool sky, actual = warm apricot) stays fixed because it IS the
  * product.
  */

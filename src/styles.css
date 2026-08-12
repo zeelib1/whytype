@@ -1,4 +1,4 @@
-/* TypeLens — dark-only by design (a lens is used in the dark).
+/* WhyType — dark-only by design (where the late-night debugging happens).
    Semantic pair carries the product: expected = cool sky, actual = warm apricot. */
 
 :root {
@@ -58,8 +58,13 @@ body {
   font-weight: 600;
 }
 
-.wordmark-lens {
+/* The brand word is the question: serif italic "Why", mono "Type". */
+.wordmark-why {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
   color: var(--expected);
+  padding-right: 1px;
 }
 
 .tagline {

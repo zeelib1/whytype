@@ -1,6 +1,12 @@
 # Launch prep (NOTHING here is published — Zee pulls the trigger)
 
-## 0. THE NAMING DECISION (blocker — Zee decides)
+## 0. THE NAMING DECISION — ✅ DECIDED: **WhyType** (Zee, 2026-08-12)
+
+Rename sweep done (code, wordmark, worker, extension manifest, repo).
+Still to claim at launch: `whytype` on npm (free as of 2026-08-12), whytype.dev
+domain, X handle, VS Code marketplace publisher.
+
+Original findings, kept for the record:
 
 **"TypeLens" is taken where it hurts most.** Findings (2026-08-12):
 
@@ -40,13 +46,13 @@ autoplay on X/HN).
 
 ## 2. Show HN draft
 
-**Title:** Show HN: <Name> – see why a TypeScript type error actually happened
+**Title:** Show HN: WhyType – see why a TypeScript type error actually happened
 
 **Body:**
 Every TypeScript developer knows the wall-of-text error: "Type X is not
 assignable to type Y", forty lines, the real problem buried at depth three.
 
-<Name> is a playground that renders the compiler's own reasoning as an
+WhyType is a playground that renders the compiler's own reasoning as an
 explorable chain: click an error and read it as "because → because →
 because", with the type you gave it and the type it expected color-coded at
 every step. Put the cursor in a generic call to see what every type parameter
@@ -78,7 +84,7 @@ add to the gallery next?" (comment bait that's actually useful roadmap input.)
 
 ## 4. X/Twitter thread draft (5 posts)
 
-1. Video + "TypeScript errors tell you WHAT failed. <Name> shows you WHY —
+1. Video + "TypeScript errors tell you WHAT failed. WhyType shows you WHY —
    the compiler's actual reasoning, because by because. Runs entirely in your
    tab. <URL>"
 2. Screenshot of because-chain: "The famous 40-line wall of text is a tree.
@@ -95,11 +101,11 @@ add to the gallery next?" (comment bait that's actually useful roadmap input.)
 
 ## 5. Remaining build work before flipping public
 
-- [ ] Rename (see §0) — repo, worker, extension manifest, wordmark, docs
+- [x] Rename (see §0) — repo, worker, extension manifest, wordmark, docs
 - [ ] LICENSE (MIT, Zee's name) + README badges/screenshots
 - [ ] OG/social meta tags + og-image (screenshot of because-chain)
 - [ ] Favicon/logo mark
-- [ ] `@<scope>/core` npm package skeleton (engine is already injected/isolated;
+- [ ] `@whytype/core` npm package skeleton (engine is already injected/isolated;
       needs package.json, exports map, build step, README) — publish at launch
 - [ ] Extension: icon, README with GIF, `vsce package`, publisher account —
       publish at launch
@@ -112,7 +118,7 @@ add to the gallery next?" (comment bait that's actually useful roadmap input.)
 ## 6. Launch-day order of operations
 
 1. Final deploy + smoke test (gallery links, share round-trip, mobile layout)
-2. Repo → public; npm publish `@<scope>/core`; marketplace publish extension
+2. Repo → public; npm publish `@whytype/core`; marketplace publish extension
 3. Show HN (morning US time), then X thread ~1h later, r/typescript same day
 4. TypeScript Discord #show-and-tell after the HN thread has some life
 5. Reply to every single comment on day one — that IS the launch

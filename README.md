@@ -1,4 +1,4 @@
-# TypeLens
+# WhyType
 
 **The compiler, explaining itself.** An interactive visual debugger for
 TypeScript types: click an error and read the checker's reasoning as a
@@ -17,7 +17,7 @@ a virtual filesystem. Nothing leaves the tab. Sharing is a compressed
   stable API lands in TS 7.1; every internal-API touch is quarantined in
   `engine/adapter.ts`, the single seam for that port.
 - Conditional-type verdicts are never approximated: the engine synthesizes
-  probe aliases (`type __TL_P0 = [check] extends [target] ? ... : ...`) into
+  probe aliases (`type __WT_P0 = [check] extends [target] ? ... : ...`) into
   one extra program and reads back what the checker actually decided.
 - `src/` — Vite + React + Monaco playground UI.
 - `spike/` — Phase 0 feasibility spike and the Node test harness.

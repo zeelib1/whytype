@@ -1,6 +1,6 @@
 /**
  * The extraction engine: runs the TS 6 (Strada) checker over a single
- * in-memory file and converts its output into TypeLens wire types.
+ * in-memory file and converts its output into WhyType wire types.
  * Public compiler API only — internals live in adapter.ts.
  */
 import ts from "typescript-strada";
@@ -272,14 +272,14 @@ function traceConditional(
     if (plan.naked && plan.checkType.flags & (ts.TypeFlags.Any | ts.TypeFlags.Never)) continue;
     if (plan.naked && plan.checkType.isUnion()) {
       plan.memberProbes = plan.checkType.types.map((m) => {
-        const probe = `__TL_P${probeId++}`;
-        probeSrc += `type ${probe} = [${typeToString(m)}] extends [${plan.extendsText}] ? "__TL_T" : "__TL_F";\n`;
+        const probe = `__WT_P${probeId++}`;
+        probeSrc += `type ${probe} = [${typeToString(m)}] extends [${plan.extendsText}] ? "__WT_T" : "__WT_F";\n`;
         return { text: typeToString(m), probe };
       });
     } else {
-      plan.probe = `__TL_P${probeId++}`;
+      plan.probe = `__WT_P${probeId++}`;
       // Tuple-wrapping suppresses distribution so one probe = one verdict.
-      probeSrc += `type ${plan.probe} = [${plan.checkText}] extends [${plan.extendsText}] ? "__TL_T" : "__TL_F";\n`;
+      probeSrc += `type ${plan.probe} = [${plan.checkText}] extends [${plan.extendsText}] ? "__WT_T" : "__WT_F";\n`;
     }
   }
 
@@ -288,10 +288,10 @@ function traceConditional(
   if (probeSrc) {
     const probed = makeProgram(source.text + "\n" + probeSrc);
     probed.source.forEachChild((st) => {
-      if (!ts.isTypeAliasDeclaration(st) || !st.name.text.startsWith("__TL_P")) return;
+      if (!ts.isTypeAliasDeclaration(st) || !st.name.text.startsWith("__WT_P")) return;
       const s = probed.checker.typeToString(probed.checker.getTypeAtLocation(st.name));
-      const hasT = s.includes('"__TL_T"');
-      const hasF = s.includes('"__TL_F"');
+      const hasT = s.includes('"__WT_T"');
+      const hasF = s.includes('"__WT_F"');
       verdictOf.set(st.name.text, hasT && hasF ? "both" : hasT ? "true" : hasF ? "false" : "unknown");
     });
   }

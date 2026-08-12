@@ -15,8 +15,8 @@ function showWhy(uri: vscode.Uri, diagnostic: vscode.Diagnostic) {
 
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
-      "typelens.why",
-      "TypeLens — Why?",
+      "whytype.why",
+      "WhyType — Why?",
       { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
       { enableScripts: false }
     );
@@ -37,7 +37,7 @@ function showWhy(uri: vscode.Uri, diagnostic: vscode.Diagnostic) {
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "typelens.why",
+      "whytype.why",
       (uri?: vscode.Uri, diagnostic?: vscode.Diagnostic) => {
         // Invoked from a code action we get the diagnostic; from the command
         // palette we look one up at the cursor.
@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
           .getDiagnostics(editor.document.uri)
           .find((d) => TS_SOURCES.has(d.source ?? "") && d.range.contains(at));
         if (hit) showWhy(editor.document.uri, hit);
-        else vscode.window.showInformationMessage("TypeLens: no TypeScript error at the cursor.");
+        else vscode.window.showInformationMessage("WhyType: no TypeScript error at the cursor.");
       }
     ),
 
@@ -64,12 +64,12 @@ export function activate(context: vscode.ExtensionContext) {
             .filter((d) => TS_SOURCES.has(d.source ?? ""))
             .map((d) => {
               const action = new vscode.CodeAction(
-                "TypeLens: Why does this fail?",
+                "WhyType: Why does this fail?",
                 vscode.CodeActionKind.QuickFix
               );
               action.command = {
-                command: "typelens.why",
-                title: "TypeLens: Why does this fail?",
+                command: "whytype.why",
+                title: "WhyType: Why does this fail?",
                 arguments: [document.uri, d],
               };
               action.diagnostics = [d];

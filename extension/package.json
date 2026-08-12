@@ -1,6 +1,6 @@
 {
-  "name": "typelens-vscode",
-  "displayName": "TypeLens",
+  "name": "whytype-vscode",
+  "displayName": "WhyType",
   "description": "The compiler, explaining itself — a visual 'why' for TypeScript errors.",
   "version": "0.0.1",
   "publisher": "zeelib",
@@ -21,8 +21,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "typelens.why",
-        "title": "TypeLens: Why does this fail?"
+        "command": "whytype.why",
+        "title": "WhyType: Why does this fail?"
       }
     ]
   },

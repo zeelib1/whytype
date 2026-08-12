@@ -74,7 +74,7 @@ export function App() {
       if (model) {
         monaco.editor.setModelMarkers(
           model,
-          "typelens",
+          "whytype",
           diags.map((d) => ({
             severity: severity[d.category],
             message: d.chain.message,
@@ -95,7 +95,7 @@ export function App() {
     const editor = monaco.editor.create(editorHost.current!, {
       value: readCodeFromHash() ?? SAMPLE,
       language: "typescript",
-      theme: "typelens",
+      theme: "whytype",
       fontFamily: "'JetBrains Mono', ui-monospace, monospace",
       fontSize: 13.5,
       lineHeight: 1.7,
@@ -158,7 +158,7 @@ export function App() {
     <div className="app">
       <header className="masthead">
         <div className="wordmark">
-          Type<span className="wordmark-lens">Lens</span>
+          <span className="wordmark-why">Why</span>Type
         </div>
         <div className="tagline">the compiler, explaining itself</div>
         <button

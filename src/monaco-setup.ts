@@ -11,7 +11,7 @@ self.MonacoEnvironment = {
   },
 };
 
-// TypeLens's own engine is the single source of truth for semantics —
+// WhyType's own engine is the single source of truth for semantics —
 // Monaco's built-in checker would disagree (different TS version) and paint
 // duplicate squiggles, so it is limited to syntax.
 monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -19,7 +19,7 @@ monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
   noSyntaxValidation: true,
 });
 
-monaco.editor.defineTheme("typelens", {
+monaco.editor.defineTheme("whytype", {
   base: "vs-dark",
   inherit: true,
   rules: [
