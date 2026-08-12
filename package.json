@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tsx spike/test-engine.ts",
+    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

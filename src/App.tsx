@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { monaco } from "./monaco-setup";
 import { EngineClient } from "./engine-client";
 import { ExplainPanel } from "./components/ExplainPanel";
+import { ExamplesGallery } from "./components/ExamplesGallery";
 import { copyShareLink, readCodeFromHash, writeCodeToHash } from "./share";
 import type { DiagnosticInfo, InspectResult } from "../engine/types";
 
@@ -54,6 +55,7 @@ export function App() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const [tsVersion, setTsVersion] = useState<string | null>(null);
   const [shareState, setShareState] = useState<"idle" | "copied" | "failed">("idle");
+  const [showExamples, setShowExamples] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagnosticInfo[]>([]);
   const [selected, setSelected] = useState<DiagnosticInfo | null>(null);
   const [inspection, setInspection] = useState<InspectResult | null>(null);
@@ -160,6 +162,12 @@ export function App() {
         </div>
         <div className="tagline">the compiler, explaining itself</div>
         <button
+          className={`share-btn examples-btn ${showExamples ? "is-active" : ""}`}
+          onClick={() => setShowExamples((v) => !v)}
+        >
+          examples
+        </button>
+        <button
           className="share-btn"
           onClick={async () => {
             const ok = await copyShareLink(editorRef.current?.getValue() ?? "");
@@ -177,12 +185,23 @@ export function App() {
       <main className="split">
         <section className="pane pane-editor" ref={editorHost} aria-label="Code editor" />
         <section className="pane pane-explain" aria-label="Type reasoning">
-          <ExplainPanel
-            diagnostics={diagnostics}
-            selected={selected}
-            inspection={inspection}
-            onSelect={selectDiagnostic}
-          />
+          {showExamples ? (
+            <ExamplesGallery
+              onPick={(ex) => {
+                editorRef.current?.setValue(ex.code);
+                setSelected(null);
+                setInspection(null);
+                setShowExamples(false);
+              }}
+            />
+          ) : (
+            <ExplainPanel
+              diagnostics={diagnostics}
+              selected={selected}
+              inspection={inspection}
+              onSelect={selectDiagnostic}
+            />
+          )}
         </section>
       </main>
       <footer className="statusbar">
