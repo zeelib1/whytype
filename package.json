@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "postinstall": "node scripts/copy-libs.mjs",
-    "deploy": "vite build && wrangler deploy"
+    "deploy": "vite build && wrangler pages deploy"
   },
   "keywords": [],
   "author": "",

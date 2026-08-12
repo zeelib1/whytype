@@ -2,11 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "whytype",
   "compatibility_date": "2026-08-01",
-  // Pure static Worker: no main script, just the built playground.
-  // single-page-application: unknown paths serve index.html, so #code/ share
-  // links (and any future client-side routes) always land in the app.
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
+  // Cloudflare Pages (direct upload, same pattern as the rest of the account):
+  // `npm run deploy` builds and uploads dist/. Custom domain attaches to the
+  // Pages project later; whytype.pages.dev is canonical until then.
+  "pages_build_output_dir": "./dist"
 }
