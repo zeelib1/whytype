@@ -3,7 +3,7 @@
   "name": "whytype",
   "compatibility_date": "2026-08-01",
   // Cloudflare Pages (direct upload, same pattern as the rest of the account):
-  // `npm run deploy` builds and uploads dist/. Canonical: whytype.eldora.studio
+  // `npm run deploy` builds and uploads dist/. Canonical: whytype.dev
   // (pages.dev 301-redirects there).
   "pages_build_output_dir": "./dist"
 }

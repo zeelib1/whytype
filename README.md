@@ -6,7 +6,7 @@ TypeScript types: click an error and read the checker's reasoning as a
 parameter was inferred as; trace which branch of a conditional type fired —
 including distribution over unions, `any` taking both branches, and `never`.
 
-**Playground: [whytype.eldora.studio](https://whytype.eldora.studio)**
+**Playground: [whytype.dev](https://whytype.dev)**
 
 Runs entirely client-side: the TypeScript compiler lives in a web worker with
 a virtual filesystem. Nothing leaves the tab. Sharing is a compressed
@@ -14,7 +14,7 @@ a virtual filesystem. Nothing leaves the tab. Sharing is a compressed
 
 ## Parts
 
-- **Playground** — [whytype.eldora.studio](https://whytype.eldora.studio),
+- **Playground** — [whytype.dev](https://whytype.dev),
   with a gallery of the greatest hits of TS confusion (`examples` button).
 - **VS Code extension** (`extension/`) — renders the same because-chain for
   your own project's tsserver diagnostics via a "Why?" quick fix.
