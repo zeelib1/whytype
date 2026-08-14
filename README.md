@@ -18,7 +18,7 @@ a virtual filesystem. Nothing leaves the tab. Sharing is a compressed
   with a gallery of the greatest hits of TS confusion (`examples` button).
 - **VS Code extension** (`extension/`) — renders the same because-chain for
   your own project's tsserver diagnostics via a "Why?" quick fix.
-- **`@whytype/core`** (`core/`) — the extraction engine as a library:
+- **`whytype` on npm** (`core/`) — the extraction engine as a library:
   diagnostics as explain-trees, generic inference bindings, conditional-type
   traces with real checker verdicts.
 

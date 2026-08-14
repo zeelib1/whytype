@@ -1,4 +1,4 @@
-# @whytype/core
+# whytype
 
 The engine behind [WhyType](https://github.com/zeelib1/whytype) — extract the
 TypeScript compiler's *reasoning*, not just its verdicts:
@@ -18,7 +18,7 @@ The engine is host-agnostic: you inject the default-lib `.d.ts` files once,
 then analyze single-file snippets.
 
 ```ts
-import { analyze, initEngine, inspect } from "@whytype/core";
+import { analyze, initEngine, inspect } from "whytype";
 import fs from "node:fs";
 import path from "node:path";
 

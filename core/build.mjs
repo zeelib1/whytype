@@ -1,5 +1,5 @@
 /**
- * Builds @whytype/core from ../engine sources.
+ * Builds whytype from ../engine sources.
  *
  * The repo's engine imports "typescript-strada" (an npm alias pinning the
  * last JS-based compiler). Published consumers bring their own `typescript`
@@ -57,4 +57,4 @@ for (const f of fs.readdirSync(dist)) {
   const p = path.join(dist, f);
   fs.writeFileSync(p, fs.readFileSync(p, "utf8").replaceAll("typescript-strada", "typescript"));
 }
-console.log("built @whytype/core ->", fs.readdirSync(dist).join(", "));
+console.log("built whytype ->", fs.readdirSync(dist).join(", "));
