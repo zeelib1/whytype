@@ -98,6 +98,15 @@ const categoryNames = ["warning", "error", "suggestion", "message"] as const;
 
 export function analyze(code: string): DiagnosticInfo[] {
   const { program, source } = getSession(code);
+  return analyzeSourceFile(program, source);
+}
+
+/** Program-agnostic core shared by the playground session and project mode. */
+export function analyzeSourceFile(
+  program: ts.Program,
+  source: ts.SourceFile,
+  opts?: { filePath?: string }
+): DiagnosticInfo[] {
   const all = [
     ...program.getSyntacticDiagnostics(source),
     ...program.getSemanticDiagnostics(source),
@@ -107,13 +116,23 @@ export function analyze(code: string): DiagnosticInfo[] {
     const length = d.length ?? 1;
     const s = source.getLineAndCharacterOfPosition(start);
     const e = source.getLineAndCharacterOfPosition(start + length);
-    const related: RelatedInfo[] = (d.relatedInformation ?? []).map((r) => ({
-      code: r.code,
-      message: ts.flattenDiagnosticMessageText(r.messageText, " "),
-      start: r.file?.fileName === FILE ? r.start : undefined,
-      length: r.file?.fileName === FILE ? r.length : undefined,
-    }));
-    return {
+    const related: RelatedInfo[] = (d.relatedInformation ?? []).map((r) => {
+      const info: RelatedInfo = {
+        code: r.code,
+        message: ts.flattenDiagnosticMessageText(r.messageText, " "),
+        start: r.file?.fileName === source.fileName ? r.start : undefined,
+        length: r.file?.fileName === source.fileName ? r.length : undefined,
+      };
+      // Cross-file "declared here" sites become addressable in project mode.
+      if (opts?.filePath && r.file && r.start != null) {
+        const rp = r.file.getLineAndCharacterOfPosition(r.start);
+        info.file = r.file.fileName;
+        info.line = rp.line + 1;
+        info.column = rp.character + 1;
+      }
+      return info;
+    });
+    const out: DiagnosticInfo = {
       code: d.code,
       category: categoryNames[d.category],
       start,
@@ -125,6 +144,8 @@ export function analyze(code: string): DiagnosticInfo[] {
       chain: toExplainNode(d.messageText, d.code),
       related,
     };
+    if (opts?.filePath) out.file = opts.filePath;
+    return out;
   });
 }
 
@@ -171,7 +192,11 @@ function findConditionalReference(
     cur = cur.parent;
   }
   if (!ref) return null;
-  const symbol = checker.getSymbolAtLocation(ref.typeName);
+  let symbol = checker.getSymbolAtLocation(ref.typeName);
+  // An imported alias resolves to an ImportSpecifier; follow it to the real one.
+  if (symbol && symbol.flags & ts.SymbolFlags.Alias) {
+    symbol = checker.getAliasedSymbol(symbol);
+  }
   const aliasDecl = symbol
     ?.getDeclarations()
     ?.find((d): d is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(d));
@@ -200,14 +225,28 @@ function mentionsParam(tn: ts.TypeNode, mapping: ArgMapping): boolean {
   return found;
 }
 
+/**
+ * Compiles the inspected file's text with probe aliases appended and returns
+ * the resulting file+checker. The playground appends to the virtual /main.ts;
+ * project mode shadows the file inside a real program.
+ */
+export type ProbeCompiler = (fullText: string) => {
+  source: ts.SourceFile;
+  checker: ts.TypeChecker;
+};
+
 function traceConditional(
   node: ts.Node,
   source: ts.SourceFile,
-  checker: ts.TypeChecker
+  checker: ts.TypeChecker,
+  probe: ProbeCompiler
 ): ConditionalTrace | null {
   const found = findConditionalReference(node, checker);
   if (!found) return null;
   const { refNode, aliasDecl } = found;
+  // The alias may be declared in another file (project mode) — getText must
+  // read each node against its own source file, never the inspected one.
+  const aliasSource = aliasDecl.getSourceFile();
   const params = aliasDecl.typeParameters ?? [];
   const args = refNode.typeArguments ?? [];
   if (!params.length || args.length !== params.length) return null;
@@ -230,7 +269,7 @@ function traceConditional(
   const textFor = (tn: ts.TypeNode): string | null => {
     const naked = nakedParamName(tn, mapping);
     if (naked) return mapping.get(naked)!.text;
-    if (!mentionsParam(tn, mapping)) return tn.getText(source);
+    if (!mentionsParam(tn, mapping)) return tn.getText(aliasSource);
     return null;
   };
   const typeFor = (tn: ts.TypeNode): ts.Type | null => {
@@ -286,7 +325,7 @@ function traceConditional(
   // Pass 2: one extra program answers every probe with real checker semantics.
   const verdictOf = new Map<string, "true" | "false" | "both" | "unknown">();
   if (probeSrc) {
-    const probed = makeProgram(source.text + "\n" + probeSrc);
+    const probed = probe(source.text + "\n" + probeSrc);
     probed.source.forEachChild((st) => {
       if (!ts.isTypeAliasDeclaration(st) || !st.name.text.startsWith("__WT_P")) return;
       const s = probed.checker.typeToString(probed.checker.getTypeAtLocation(st.name));
@@ -349,6 +388,16 @@ function traceConditional(
 
 export function inspect(code: string, position: number): InspectResult | null {
   const { source, checker } = getSession(code);
+  return inspectSourceFile(source, checker, position, (text) => makeProgram(text));
+}
+
+/** Program-agnostic core shared by the playground session and project mode. */
+export function inspectSourceFile(
+  source: ts.SourceFile,
+  checker: ts.TypeChecker,
+  position: number,
+  probe: ProbeCompiler
+): InspectResult | null {
   const node = nodeAtPosition(source, position);
   if (ts.isSourceFile(node)) return null;
 
@@ -387,7 +436,7 @@ export function inspect(code: string, position: number): InspectResult | null {
 
   let conditional: ConditionalTrace | undefined;
   try {
-    conditional = traceConditional(node, source, checker) ?? undefined;
+    conditional = traceConditional(node, source, checker, probe) ?? undefined;
   } catch {
     conditional = undefined;
   }

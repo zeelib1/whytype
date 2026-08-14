@@ -12,7 +12,43 @@ TypeScript compiler's *reasoning*, not just its verdicts:
   branches, and `never`. Verdicts come from probe types the checker itself
   evaluates, never from reimplemented assignability.
 
-## Usage
+## MCP (agents)
+
+Give your agent the compiler's own explanation instead of letting it guess.
+In the project being debugged (it needs a local `typescript` install):
+
+```sh
+npm i -D whytype
+claude mcp add whytype -- npx whytype mcp
+```
+
+Tools: `whytype_diagnostics` (compact error list), `whytype_explain`
+(because-chain + inference bindings + conditional trace at `file:line:col`),
+`whytype_snippet` (explain pasted code, no project needed).
+
+## CLI
+
+```sh
+npx whytype src/app.ts:42:7   # explain one location
+npx whytype check             # every project error as a because-tree
+npx whytype check --json      # stable wire types for scripts
+```
+
+tsconfig.json is discovered upward from cwd (`--project` overrides). Exit
+codes: 0 clean, 1 errors found, 2 usage/environment problem.
+
+## Library — project mode (Node)
+
+```ts
+import { createProject } from "whytype/node";
+
+const project = createProject({ rootDir: process.cwd() });
+project.analyze();                                    // DiagnosticInfo[] with file paths
+project.inspect("src/app.ts", { line: 42, column: 7 });
+console.log(project.explainMarkdown({ file: "src/app.ts" }));
+```
+
+## Library — snippet mode
 
 The engine is host-agnostic: you inject the default-lib `.d.ts` files once,
 then analyze single-file snippets.

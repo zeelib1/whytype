@@ -16,6 +16,11 @@ export interface RelatedInfo {
   /** Offsets into the analyzed file, when the related site is in it. */
   start?: number;
   length?: number;
+  /** Path of the related site's file (project mode; absent in the playground). */
+  file?: string;
+  /** 1-based position in `file` (project mode). */
+  line?: number;
+  column?: number;
 }
 
 export interface DiagnosticInfo {
@@ -30,6 +35,8 @@ export interface DiagnosticInfo {
   endColumn: number;
   chain: ExplainNode;
   related: RelatedInfo[];
+  /** Path of the diagnosed file (project mode; absent in the playground). */
+  file?: string;
 }
 
 /** Inferred binding for one type parameter at a call site. */
@@ -73,6 +80,16 @@ export interface InspectResult {
   typeString: string;
   call?: CallInfo;
   conditional?: ConditionalTrace;
+  /** Path of the inspected file (project mode; absent in the playground). */
+  file?: string;
+}
+
+/** One-shot answer for "explain this location": diagnostics plus inspection. */
+export interface ExplainResult {
+  file: string;
+  tsVersion: string;
+  diagnostics: DiagnosticInfo[];
+  inspect: InspectResult | null;
 }
 
 export type EngineRequest =

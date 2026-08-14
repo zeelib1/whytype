@@ -1,6 +1,6 @@
 {
   "name": "whytype",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Extract the TypeScript compiler's reasoning: diagnostics as explain-trees, generic inference bindings, and conditional-type traces with real checker verdicts.",
   "license": "MIT",
   "author": "Eldora Studio (https://eldora.studio)",
@@ -18,7 +18,18 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js",
+      "require": "./dist/node.cjs"
     }
+  },
+  "bin": {
+    "whytype": "./dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "files": [
     "dist",
@@ -29,6 +40,10 @@
   },
   "peerDependencies": {
     "typescript": ">=5.0 <7"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.0.0"
   },
   "publishConfig": {
     "access": "public"

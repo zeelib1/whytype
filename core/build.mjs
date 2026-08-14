@@ -40,12 +40,73 @@ for (const [format, outfile] of [
   });
 }
 
+// ── Node builds ────────────────────────────────────────────────────────────
+// `whytype/node`: project mode as a library — consumer's `typescript` peer.
+for (const [format, outfile] of [
+  ["esm", "node.js"],
+  ["cjs", "node.cjs"],
+]) {
+  await esbuild.build({
+    entryPoints: [path.join(root, "engine", "node.ts")],
+    bundle: true,
+    format,
+    platform: "node",
+    target: "es2022",
+    outfile: path.join(dist, outfile),
+    plugins: [aliasToTypescript],
+  });
+}
+
+// CLI + MCP: the engine runs on a cwd-first-resolved typescript (ts-shim),
+// so `npx whytype` picks up the compiler of the project being debugged.
+const aliasToShim = {
+  name: "alias-typescript-shim",
+  setup(build) {
+    build.onResolve({ filter: /^typescript-strada$/ }, () => ({
+      path: path.join(import.meta.dirname, "src", "ts-shim.ts"),
+    }));
+  },
+};
+// mcp.js stays a separate file so plain CLI runs never load the MCP SDK.
+const externalMcpModule = {
+  name: "external-mcp",
+  setup(build) {
+    build.onResolve({ filter: /^\.\/mcp\.js$/ }, () => ({
+      path: "./mcp.js",
+      external: true,
+    }));
+  },
+};
+const nodeExternals = ["@modelcontextprotocol/sdk", "zod"];
+await esbuild.build({
+  entryPoints: [path.join(import.meta.dirname, "src", "cli.ts")],
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  target: "node20",
+  outfile: path.join(dist, "cli.js"),
+  banner: { js: "#!/usr/bin/env node" },
+  external: nodeExternals,
+  plugins: [aliasToShim, externalMcpModule],
+});
+await esbuild.build({
+  entryPoints: [path.join(import.meta.dirname, "src", "mcp.ts")],
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  target: "node20",
+  outfile: path.join(dist, "mcp.js"),
+  external: nodeExternals,
+  plugins: [aliasToShim],
+});
+fs.chmodSync(path.join(dist, "cli.js"), 0o755);
+
 // Declarations via the pinned TS 6 compiler, then the same import rewrite.
 execFileSync(
   "node",
   [
     path.join(root, "node_modules", "typescript-strada", "lib", "tsc.js"),
-    ...["engine/index.ts", "--ignoreConfig", "--declaration", "--emitDeclarationOnly"],
+    ...["engine/index.ts", "engine/node.ts", "--ignoreConfig", "--declaration", "--emitDeclarationOnly"],
     ...["--outDir", dist, "--target", "es2022", "--module", "esnext"],
     ...["--moduleResolution", "bundler", "--strict", "--skipLibCheck"],
   ],

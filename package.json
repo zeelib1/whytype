@@ -5,7 +5,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts",
+    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts && tsx spike/test-project.ts && npm run build:core && tsx spike/test-cli.ts && tsx spike/test-mcp.ts",
+    "build:core": "node core/build.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
@@ -17,6 +18,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
@@ -27,7 +29,8 @@
     "typescript": "^7.0.2",
     "typescript-strada": "npm:typescript@^6.0.3",
     "vite": "^8.2.1",
-    "wrangler": "^4.121.0"
+    "wrangler": "^4.121.0",
+    "zod": "^4.4.3"
   },
   "dependencies": {
     "lz-string": "^1.5.0"

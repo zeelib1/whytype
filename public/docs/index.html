@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhyType docs — TypeScript debugging, from agentic to manual</title>
+    <meta
+      name="description"
+      content="Every door into the TypeScript compiler's reasoning: MCP server for agents, CLI, playground, VS Code extension, and the whytype library."
+    />
+    <meta property="og:title" content="WhyType — TypeScript debugging, from agentic to manual" />
+    <meta
+      property="og:description"
+      content="MCP server for agents, CLI, in-browser playground, VS Code extension, and the whytype library — one because-chain engine behind all of them."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://whytype.dev/docs/" />
+    <meta property="og:image" content="https://whytype.dev/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script defer data-domain="whytype.dev" src="https://plausible.1qc.dev/js/script.js"></script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0e1116;
+        --surface: #151a21;
+        --line: #232b36;
+        --text: #dee7f0;
+        --muted: #77828f;
+        --expected: #5cc8ff;
+        --actual: #ffa366;
+        --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --serif: "Newsreader", Georgia, serif;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13.5px;
+        line-height: 1.7;
+      }
+      .page { max-width: 780px; margin: 0 auto; padding: 28px 22px 80px; }
+      a { color: var(--expected); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .wordmark { font-size: 17px; font-weight: 600; letter-spacing: 0.02em; }
+      .wordmark-why { font-family: var(--serif); font-style: italic; font-weight: 500; color: var(--expected); padding-right: 1px; }
+      .tagline { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--muted); margin: 4px 0 40px; }
+      h2 {
+        font-family: var(--serif); font-style: italic; font-weight: 500;
+        font-size: 21px; margin: 52px 0 10px; color: var(--text);
+      }
+      h2 .k { color: var(--actual); }
+      p { margin: 10px 0; }
+      .muted { color: var(--muted); }
+      pre {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+        padding: 12px 16px; overflow-x: auto; margin: 14px 0; font-size: 12.5px; line-height: 1.6;
+      }
+      code { font-family: var(--mono); }
+      p code, li code { color: var(--actual); }
+      pre .c { color: var(--muted); }
+      pre .e { color: var(--expected); }
+      ul { padding-left: 22px; margin: 10px 0; }
+      li { margin: 4px 0; }
+      li b, p b { color: var(--expected); font-weight: 600; }
+      .footer { margin-top: 70px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 12px; }
+      .transcript { border-left: 2px solid var(--line); padding-left: 14px; margin: 14px 0; }
+      .transcript .turn { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <a href="/" class="wordmark"><span class="wordmark-why">Why</span>Type</a>
+      <div class="tagline">TypeScript debugging, from agentic to manual</div>
+
+      <p>
+        One engine extracts the compiler's actual reasoning — diagnostics as
+        <b>because-chains</b>, <b>generic inference bindings</b>, and
+        <b>conditional-type traces</b> with real checker verdicts. Five doors into it,
+        pick yours: an MCP server for agents, a CLI, an in-browser
+        <a href="/">playground</a>, a VS Code extension, and a library.
+      </p>
+
+      <h2 id="agents"><span class="k">01</span> For agents — MCP server</h2>
+      <p>
+        Your agent hits a cryptic TS error and starts guessing. Give it the compiler's own
+        explanation instead. In the project you're debugging:
+      </p>
+      <pre><span class="c"># the project needs its own typescript (>=5 &lt;7)</span>
+npm i -D whytype
+claude mcp add whytype -- npx whytype mcp</pre>
+      <p>Three tools appear:</p>
+      <ul>
+        <li><code>whytype_diagnostics</code> — compact error list: file, line, column, code.</li>
+        <li><code>whytype_explain</code> — the full reasoning at a location: nested because-chain, inferred type arguments, which conditional branch fired and why.</li>
+        <li><code>whytype_snippet</code> — explain a pasted snippet, no project needed.</li>
+      </ul>
+      <div class="transcript">
+        <p><span class="turn">agent&gt;</span> tsc says: Type 'string' is not assignable to type 'number' — calls <code>whytype_explain(src/config.ts:12:5)</code></p>
+        <p><span class="turn">whytype&gt;</span> <span class="e">## error TS2322 — src/config.ts:12:5</span> … Because: TS2326 Types of property 'port' are incompatible… Related: src/shapes.ts:2:3 — 'port' is declared here.</p>
+        <p><span class="turn">agent&gt;</span> fixes the declaration site, not the symptom.</p>
+      </div>
+
+      <h2 id="cli"><span class="k">02</span> CLI</h2>
+      <pre>npx whytype src/app.ts:42:7   <span class="c"># explain one location</span>
+npx whytype check             <span class="c"># every project error as a because-tree</span>
+npx whytype check --json      <span class="c"># stable wire types for scripts</span></pre>
+      <p class="muted">
+        tsconfig.json is found upward from cwd (<code>--project</code> to override). Exit
+        codes: 0 clean, 1 errors found, 2 usage/environment. Runs on your project's own
+        <code>typescript</code> install.
+      </p>
+
+      <h2 id="playground"><span class="k">03</span> Playground</h2>
+      <p>
+        <a href="/">whytype.dev</a> — paste code, click an error, read the reasoning.
+        Runs entirely in your browser: the compiler lives in a web worker, nothing leaves
+        the tab. Share buttons encode code into the URL fragment.
+      </p>
+
+      <h2 id="vscode"><span class="k">04</span> VS Code extension</h2>
+      <p>
+        A <i>"Why does this fail?"</i> quick fix on any TypeScript diagnostic renders the
+        because-chain for your own project, in the editor.
+        <a href="https://marketplace.visualstudio.com/items?itemName=eldora-studio.whytype">Marketplace →</a>
+      </p>
+
+      <h2 id="library"><span class="k">05</span> Library</h2>
+      <pre>npm i whytype</pre>
+      <pre><span class="c">// snippet engine (browser or Node)</span>
+import { analyze, initEngine, inspect } from "whytype";
+
+<span class="c">// real-project mode + markdown rendering (Node)</span>
+import { createProject } from "whytype/node";
+const project = createProject({ rootDir: process.cwd() });
+console.log(project.explainMarkdown({ file: "src/app.ts" }));</pre>
+      <p class="muted">
+        Inference bindings read one internal checker field, validated against the pinned
+        TS 6 — on other 5.x/6.x versions they are best-effort and degrade to absent,
+        never wrong. Everything else uses public compiler API only.
+      </p>
+
+      <div class="footer">
+        <a href="https://github.com/zeelib1/whytype">GitHub</a> ·
+        <a href="https://www.npmjs.com/package/whytype">npm</a> ·
+        <a href="/llms.txt">llms.txt</a> ·
+        MIT © <a href="https://eldora.studio">Eldora Studio</a>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,8 +1,9 @@
 /**
- * Public API surface of the WhyType engine — what @whytype/core exports.
- * Host-agnostic: callers inject the default-lib files (initEngine), so the
- * same code runs in a web worker, Node, or a VS Code extension host.
+ * Node entry (`whytype/node`): real-project mode plus everything the neutral
+ * entry offers. Kept separate so browser consumers never pull in ts.sys.
  */
+export { createProject } from "./project";
+export type { ExplainQuery, Position, Project, ProjectOptions } from "./project";
 export { analyze, initEngine, inspect, tsVersion } from "./analyze";
 export { renderDiagnostic, renderExplain, renderInspect } from "./render";
 export type { RenderOptions } from "./render";

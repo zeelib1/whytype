@@ -161,6 +161,9 @@ export function App() {
           <span className="wordmark-why">Why</span>Type
         </div>
         <div className="tagline">the compiler, explaining itself</div>
+        <a className="share-btn docs-btn" href="/docs/">
+          docs
+        </a>
         <button
           className={`share-btn examples-btn ${showExamples ? "is-active" : ""}`}
           onClick={() => setShowExamples((v) => !v)}

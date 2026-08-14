@@ -1,0 +1,23 @@
+# WhyType
+
+> Extracts the TypeScript compiler's own reasoning: diagnostics as "because"
+> chains, generic type-parameter inference bindings, and conditional-type
+> traces with real checker verdicts. Runs on the project's own typescript
+> install (>=5.0 <7).
+
+## For agents
+
+- MCP server: `npx whytype mcp` (stdio). Tools: whytype_diagnostics (compact
+  error list), whytype_explain (full reasoning at file:line:col),
+  whytype_snippet (explain pasted code, no project needed).
+- Claude Code: `claude mcp add whytype -- npx whytype mcp` (run in the
+  project being debugged; it needs a local `typescript` install).
+- CLI: `npx whytype <file>:<line>:<col>` | `npx whytype check` |
+  `--json` for stable structured output. Exit codes: 0 clean, 1 errors, 2 usage.
+
+## Docs
+
+- https://whytype.dev/docs/
+- https://whytype.dev/ (in-browser playground, code never leaves the tab)
+- https://github.com/zeelib1/whytype
+- https://www.npmjs.com/package/whytype

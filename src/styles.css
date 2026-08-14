@@ -96,6 +96,17 @@ body {
   margin-right: 8px;
 }
 
+.docs-btn {
+  color: var(--muted);
+  text-decoration: none;
+  margin-right: 8px;
+}
+
+.docs-btn:hover {
+  color: var(--expected);
+  border-color: var(--expected);
+}
+
 .examples-btn:hover,
 .examples-btn.is-active {
   border-color: var(--faint);
