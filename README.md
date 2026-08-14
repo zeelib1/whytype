@@ -54,4 +54,4 @@ the recipient's browser decompresses the code locally.
 
 ## License
 
-MIT © Zvonimir Damjanović
+MIT © [Eldora Studio](https://eldora.studio)

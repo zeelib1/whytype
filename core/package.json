@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Extract the TypeScript compiler's reasoning: diagnostics as explain-trees, generic inference bindings, and conditional-type traces with real checker verdicts.",
   "license": "MIT",
-  "author": "Zvonimir Damjanović",
+  "author": "Eldora Studio (https://eldora.studio)",
   "repository": {
     "type": "git",
     "url": "https://github.com/zeelib1/whytype",
