@@ -4,3 +4,5 @@ engine/libs/
 *.log
 .DS_Store
 *.vsix
+*.tgz
+LAUNCH.md
