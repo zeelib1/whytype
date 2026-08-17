@@ -14,8 +14,10 @@ TypeScript compiler's *reasoning*, not just its verdicts:
 
 ## MCP (agents)
 
-Give your agent the compiler's own explanation instead of letting it guess.
-In the project being debugged (it needs a local `typescript` install):
+Agents guess at flattened TS errors and patch symptoms; `whytype_explain`
+hands them the compiler's reasoning chain and the declaration site it points
+to, so they fix the cause in one loop. In the project being debugged (it
+needs a local `typescript` install):
 
 ```sh
 npm i -D whytype
@@ -25,6 +27,20 @@ claude mcp add whytype -- npx whytype mcp
 Tools: `whytype_diagnostics` (compact error list), `whytype_explain`
 (because-chain + inference bindings + conditional trace at `file:line:col`),
 `whytype_snippet` (explain pasted code, no project needed).
+
+What `whytype_explain` returns (verbatim, code frame omitted):
+
+```markdown
+## error TS2322 — src/main.ts:14:14
+
+Type '{ port: string; host: string; }' is not assignable to type 'Config'.
+
+Because:
+- TS2326 Types of property 'port' are incompatible.
+  - TS2322 Type 'string' is not assignable to type 'number'.
+
+_typescript 6.0.3_
+```
 
 ## CLI
 

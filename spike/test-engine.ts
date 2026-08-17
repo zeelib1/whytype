@@ -90,19 +90,26 @@ type Unwrap<T> = T extends Promise<infer U> ? U
 type FromPromise = Unwrap<Promise<Date>>;
 type Mixed = Unwrap<"a" | Promise<string>>;
 `;
-function quick(alias: string, wants: { result: string; verdict0: string; member?: string }) {
+function quick(
+  alias: string,
+  wants: { result: string; verdict0: string; member?: string; memberResults?: string }
+) {
   const pos = sample.indexOf(alias) + 1;
   const t = inspect(sample, pos)?.conditional;
   console.log(`── ${alias}: ${t?.referenceText} = ${t?.result}`);
   t?.steps.forEach((s, i) =>
     console.log(
       `   step ${i}: (${s.checkResolved} extends ${s.extendsResolved}) -> ${s.verdict}` +
-        (s.members ? " [" + s.members.map((m) => `${m.text}→${m.verdict}`).join(", ") + "]" : "")
+        (s.members
+          ? " [" + s.members.map((m) => `${m.text}→${m.verdict}=${m.result}`).join(", ") + "]"
+          : "")
     )
   );
   const memberStr = t?.steps[0]?.members?.map((m) => `${m.text}→${m.verdict}`).join(", ");
+  const memberResultStr = t?.steps[0]?.members?.map((m) => m.result).join(", ");
   if (t?.result !== wants.result || t?.steps[0]?.verdict !== wants.verdict0 ||
-      (wants.member && memberStr !== wants.member)) {
+      (wants.member && memberStr !== wants.member) ||
+      (wants.memberResults && memberResultStr !== wants.memberResults)) {
     console.log(`   FAIL: wanted ${JSON.stringify(wants)}`);
     failures++;
   }
@@ -112,6 +119,7 @@ quick("Mixed", {
   result: "string | number",
   verdict0: "distributes",
   member: '"a"→false, Promise<string>→true',
+  memberResults: "number, string",
 });
 
 console.log(failures ? `\n✗ ${failures} failure(s)` : "\n✓ all engine checks pass");

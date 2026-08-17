@@ -108,7 +108,8 @@ export function renderInspect(r: InspectResult, opts: RenderOptions = {}): strin
       const branch = s.branchTakenText ? ` → takes \`${s.branchTakenText}\`` : "";
       lines.push(`${i + 1}. \`${s.checkText}\`${resolved} → ${VERDICT[s.verdict]}${branch}`);
       for (const m of s.members ?? []) {
-        lines.push(`   - \`${m.text}\` → ${m.verdict}`);
+        const contributes = m.result ? ` → \`${m.result}\`` : "";
+        lines.push(`   - \`${m.text}\` → ${m.verdict}${contributes}`);
       }
     });
     lines.push(`Result: \`${r.conditional.result}\``);

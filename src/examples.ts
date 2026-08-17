@@ -8,6 +8,9 @@ export interface Example {
   title: string;
   note: string;
   code: string;
+  /** Needle into `code`: the cursor lands at its first occurrence on load,
+   *  so cursor-dependent examples pay off without hunting. */
+  cursorAt?: string;
 }
 
 export const EXAMPLES: Example[] = [
@@ -78,25 +81,27 @@ const options: ChartOptions = {
   {
     slug: "distribution",
     title: "Why not (string | number)[]?",
-    note: "Put the cursor on Mixed: conditionals distribute over unions, member by member.",
+    note: "Conditionals distribute over unions, member by member — watch each one choose.",
     code: `type ToArray<T> = T extends unknown ? T[] : never;
 
 // Expectation: (string | number)[]
-// Reality: string[] | number[] — put the cursor on Mixed to see why.
+// Reality: string[] | number[] — the trace on the right shows why.
 type Mixed = ToArray<string | number>;
 `,
+    cursorAt: "Mixed = ToArray",
   },
   {
     slug: "any-both-branches",
     title: "any takes both branches",
-    note: "Put the cursor on Sneaky: any is the one type that refuses to choose.",
+    note: "any is the one type that refuses to choose — see both branches fire.",
     code: `type IsString<T> = T extends string ? "yes" : "no";
 
 type Sure = IsString<"hi">;
 
-// Cursor here: why is this "yes" | "no"?
+// Why is this "yes" | "no"?
 type Sneaky = IsString<any>;
 `,
+    cursorAt: "Sneaky = IsString",
   },
   {
     slug: "readonly-door",
@@ -114,15 +119,16 @@ total(frozen);
   {
     slug: "watch-inference",
     title: "Watch inference happen",
-    note: "Put the cursor inside the call: every type parameter, and what it became.",
+    note: "Every type parameter, and what it became — inferred live at the call.",
     code: `function prop<T, K extends keyof T>(obj: T, key: K): T[K] {
   return obj[key];
 }
 
 const config = { host: "localhost", port: 8080, tls: true };
 
-// Cursor inside the parentheses: T and K, inferred live.
+// T and K, inferred live at this call:
 const port = prop(config, "port");
 `,
+    cursorAt: `config, "port"`,
   },
 ];

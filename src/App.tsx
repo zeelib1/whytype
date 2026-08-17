@@ -4,7 +4,8 @@ import { EngineClient } from "./engine-client";
 import { ExplainPanel } from "./components/ExplainPanel";
 import { ExamplesGallery } from "./components/ExamplesGallery";
 import { copyShareLink, readCodeFromHash, writeCodeToHash } from "./share";
-import type { DiagnosticInfo, InspectResult } from "../engine/types";
+import { renderExplain } from "../engine/render";
+import type { DiagnosticInfo, ExplainResult, InspectResult } from "../engine/types";
 
 const SAMPLE = `interface Config {
   server: {
@@ -61,6 +62,10 @@ export function App() {
   const [inspection, setInspection] = useState<InspectResult | null>(null);
   const diagnosticsRef = useRef(diagnostics);
   diagnosticsRef.current = diagnostics;
+  // Separate collections so a related-site flash never clobbers the hover wash.
+  const flashDecor = useRef<monaco.editor.IEditorDecorationsCollection>();
+  const hoverDecor = useRef<monaco.editor.IEditorDecorationsCollection>();
+  const flashTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const runAnalysis = useCallback(
     async (code: string) => {
@@ -108,6 +113,8 @@ export function App() {
       fixedOverflowWidgets: true,
     });
     editorRef.current = editor;
+    flashDecor.current = editor.createDecorationsCollection();
+    hoverDecor.current = editor.createDecorationsCollection();
 
     let timer: ReturnType<typeof setTimeout>;
     const analyzeSoon = () => {
@@ -141,6 +148,49 @@ export function App() {
     engine.ready.then(() => runAnalysis(editor.getValue()));
     return () => editor.dispose();
   }, [engine, runAnalysis]);
+
+  /** Jump to a same-file related site ("declared here") and flash it. */
+  const revealRange = (start: number, length: number) => {
+    const editor = editorRef.current;
+    const model = editor?.getModel();
+    if (!editor || !model) return;
+    const from = model.getPositionAt(start);
+    const to = model.getPositionAt(start + length);
+    const range = new monaco.Range(from.lineNumber, from.column, to.lineNumber, to.column);
+    editor.revealRangeInCenterIfOutsideViewport(range);
+    editor.setPosition(from);
+    clearTimeout(flashTimer.current);
+    flashDecor.current?.set([{ range, options: { className: "wt-flash" } }]);
+    flashTimer.current = setTimeout(() => flashDecor.current?.set([]), 1400);
+  };
+
+  /** Hovering the reasoning washes the code span it is about. */
+  const hoverDiagnostic = (d: DiagnosticInfo | null) => {
+    hoverDecor.current?.set(
+      d
+        ? [
+            {
+              range: new monaco.Range(d.startLine, d.startColumn, d.endLine, d.endColumn),
+              options: { className: "wt-hover-span" },
+            },
+          ]
+        : []
+    );
+  };
+
+  // The exact markdown whytype_explain/whytype_snippet would return for the
+  // current selection — renderExplain is the same serializer the MCP server uses.
+  const agentMarkdown = useMemo(() => {
+    if (!selected && !inspection) return null;
+    const code = editorRef.current?.getValue() ?? "";
+    const res: ExplainResult = {
+      file: "snippet.ts",
+      tsVersion: tsVersion ?? "…",
+      diagnostics: selected ? [{ ...selected, file: "snippet.ts" }] : [],
+      inspect: selected ? null : inspection,
+    };
+    return renderExplain(res, new Map([["snippet.ts", code]]));
+  }, [selected, inspection, tsVersion]);
 
   const selectDiagnostic = (d: DiagnosticInfo) => {
     setSelected(d);
@@ -191,10 +241,26 @@ export function App() {
           {showExamples ? (
             <ExamplesGallery
               onPick={(ex) => {
-                editorRef.current?.setValue(ex.code);
+                const editor = editorRef.current;
+                editor?.setValue(ex.code);
+                // Old offsets are meaningless in the new code — drop them before
+                // the cursor handler below runs its diagnostic hit-test.
+                diagnosticsRef.current = [];
                 setSelected(null);
                 setInspection(null);
                 setShowExamples(false);
+                // Land the cursor where the example pays off (inference call,
+                // distributing alias) so the reasoning appears without hunting.
+                if (ex.cursorAt && editor) {
+                  const offset = ex.code.indexOf(ex.cursorAt);
+                  const model = editor.getModel();
+                  if (offset >= 0 && model) {
+                    const pos = model.getPositionAt(offset);
+                    editor.setPosition(pos);
+                    editor.revealPositionInCenter(pos);
+                    editor.focus();
+                  }
+                }
               }}
             />
           ) : (
@@ -203,6 +269,9 @@ export function App() {
               selected={selected}
               inspection={inspection}
               onSelect={selectDiagnostic}
+              onRevealRange={revealRange}
+              onHoverDiagnostic={hoverDiagnostic}
+              agentMarkdown={agentMarkdown}
             />
           )}
         </section>
@@ -211,6 +280,10 @@ export function App() {
         <span>
           engine <strong>typescript@{tsVersion ?? "…"}</strong> (strada) · in-browser, nothing
           leaves this tab
+          <span className="status-agents">
+            {" "}
+            · agents: <a href="/docs/#agents">npx whytype mcp</a>
+          </span>
         </span>
         <span className={errorCount ? "status-errors" : "status-clean"}>
           {errorCount ? `${errorCount} error${errorCount > 1 ? "s" : ""}` : "no errors"}

@@ -14,6 +14,28 @@
   project being debugged; it needs a local `typescript` install).
 - CLI: `npx whytype <file>:<line>:<col>` | `npx whytype check` |
   `--json` for stable structured output. Exit codes: 0 clean, 1 errors, 2 usage.
+- Returns are markdown: `## error TS<code> — file:line:col`, a code frame, a
+  `Because:` bullet chain (one bullet per elaboration step, nested), and a
+  `Related:` list with declaration sites.
+
+## What whytype_explain returns (verbatim sample)
+
+## error TS2322 — src/main.ts:14:14
+
+Type '{ port: string; host: string; }' is not assignable to type 'Config'.
+
+Because:
+- TS2326 Types of property 'port' are incompatible.
+  - TS2322 Type 'string' is not assignable to type 'number'.
+
+**`narrowed`** : `Config`
+
+_typescript 6.0.3_
+
+(The full return also carries a `>`-marked code frame around line 14, omitted
+here for brevity. Cross-file causes arrive as `Related: src/shapes.ts:2:3 —
+The expected type comes from property 'port' which is declared here on type
+'Config'.`)
 
 ## Docs
 

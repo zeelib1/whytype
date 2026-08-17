@@ -230,6 +230,36 @@ body {
   color: var(--error);
 }
 
+.diag-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+.cat-error { background: var(--error); }
+.cat-warning { background: var(--actual); }
+.cat-suggestion,
+.cat-message { background: var(--muted); }
+
+/* "this one has a story" — chain depth on the tab */
+.diag-depth {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.view-toggle {
+  margin-left: auto;
+  color: var(--expected);
+}
+
+.view-toggle.is-agent {
+  border-color: var(--expected);
+  color: var(--expected);
+}
+
 /* ── the ask + because-chain (signature element) ──────────────────────── */
 
 .ask {
@@ -244,6 +274,11 @@ body {
 
 .chain-node {
   animation: settle 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Depth reads as depth: each nested step slides right along a rail. */
+.chain-node .chain-node {
+  margin-left: 16px;
 }
 
 @keyframes settle {
@@ -330,6 +365,66 @@ body {
   background: color-mix(in srgb, var(--param) 10%, transparent);
 }
 
+/* ── type diff: dim the agreement, light the disagreement ─────────────── */
+
+.compare-btn {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 120ms;
+}
+
+.compare-btn:hover {
+  color: var(--text);
+}
+
+.type-diff {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.type-diff-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.type-diff-label {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--muted);
+  flex: 0 0 62px;
+  text-align: right;
+}
+
+.type-diff-row code,
+.td {
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+  max-height: 12em;
+  overflow-y: auto;
+}
+
+.td .td-dim {
+  opacity: 0.45;
+}
+
+.td .td-hot {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 55%, transparent);
+}
+
 /* ── related + legend ─────────────────────────────────────────────────── */
 
 .related {
@@ -341,6 +436,32 @@ body {
 .related-item {
   color: var(--muted);
   font-size: 12.5px;
+}
+
+/* Same-file "declared here" sites are one click from the code they mean. */
+.related-chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+
+.related-chip:hover {
+  border-color: var(--expected);
+  color: var(--text);
+}
+
+.related-jump {
+  color: var(--expected);
 }
 
 .legend {
@@ -432,27 +553,194 @@ body {
   color: var(--param);
 }
 
-.members {
-  margin-top: 8px;
+/* never = a dead end; unknown = an honest shrug */
+.verdict-never {
+  color: var(--error);
+  font-style: italic;
+}
+
+.verdict-unknown {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── distribution fan-out ─────────────────────────────────────────────── */
+
+.dist {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: max-content 1.4rem minmax(0, 1fr);
+  align-items: baseline;
+  row-gap: 5px;
+  position: relative;
   padding-left: 12px;
+}
+
+/* the trunk the members fan out from */
+.dist::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
   border-left: 1px solid var(--faint);
 }
 
-.member {
+.dist-row {
+  display: contents;
+}
+
+.dist-row > * {
   animation: settle 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  margin: 3px 0;
+  animation-delay: inherit;
+}
+
+.dist-row code {
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+  justify-self: start;
   font-size: 13px;
 }
 
-.member-verdict {
-  margin-left: 8px;
-  font-size: 12px;
+.dist-rail {
+  align-self: center;
+  border-top: 1px solid var(--faint);
+  margin: 0 4px;
+}
+
+.dist-branch {
+  font-size: 12.5px;
+}
+
+.dist-arrow {
+  color: var(--muted);
+}
+
+.dist-result {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  animation: settle 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.dist-result code {
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+}
+
+.dist-eq {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .member {
+  .dist-row > *,
+  .dist-result {
     animation: none !important;
   }
+}
+
+/* ── call anatomy ─────────────────────────────────────────────────────── */
+
+.call-head {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.call-head code {
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+
+.binding-return {
+  margin-top: 6px;
+}
+
+/* ── agent view ───────────────────────────────────────────────────────── */
+
+.agent-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.agent-note {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.agent-copy {
+  margin-top: 0;
+  flex-shrink: 0;
+  color: var(--expected);
+}
+
+.agent-md {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  overflow: auto;
+  white-space: pre;
+  animation: settle 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.agent-foot {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.agent-foot a,
+.empty-agents a,
+.statusbar a {
+  color: var(--expected);
+  text-decoration: none;
+}
+
+.agent-foot a:hover,
+.empty-agents a:hover,
+.statusbar a:hover {
+  text-decoration: underline;
+}
+
+/* ── editor decorations (Monaco injects these class names) ────────────── */
+
+.wt-flash {
+  border-radius: 3px;
+  animation: wt-flash-fade 1.4s ease-out both;
+}
+
+@keyframes wt-flash-fade {
+  from {
+    background: rgba(92, 200, 255, 0.28);
+  }
+  to {
+    background: rgba(92, 200, 255, 0);
+  }
+}
+
+.wt-hover-span {
+  background: rgba(255, 163, 102, 0.12);
+  border-radius: 3px;
 }
 
 /* ── empty state ──────────────────────────────────────────────────────── */
@@ -460,6 +748,15 @@ body {
 .explain-empty p {
   color: var(--muted);
   max-width: 44ch;
+}
+
+.empty-agents {
+  margin-top: 14px;
+  font-size: 12.5px;
+}
+
+.empty-agents code {
+  color: var(--text);
 }
 
 /* ── status bar ───────────────────────────────────────────────────────── */
@@ -477,6 +774,12 @@ body {
 .statusbar strong {
   color: var(--text);
   font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .status-agents {
+    display: none;
+  }
 }
 
 .status-errors {

@@ -70,8 +70,14 @@
       li { margin: 4px 0; }
       li b, p b { color: var(--expected); font-weight: 600; }
       .footer { margin-top: 70px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 12px; }
-      .transcript { border-left: 2px solid var(--line); padding-left: 14px; margin: 14px 0; }
-      .transcript .turn { color: var(--muted); }
+      .compare { display: grid; gap: 16px; margin: 18px 0 6px; }
+      .compare-col { min-width: 0; }
+      .compare-col > pre { margin: 8px 0 0; }
+      .compare-col.is-without { opacity: 0.72; }
+      .col-title { font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--muted); }
+      .col-title b { color: var(--text); font-weight: 500; }
+      .caption { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+      .turn { color: var(--muted); }
     </style>
   </head>
   <body>
@@ -89,23 +95,69 @@
 
       <h2 id="agents"><span class="k">01</span> For agents — MCP server</h2>
       <p>
-        Your agent hits a cryptic TS error and starts guessing. Give it the compiler's own
-        explanation instead. In the project you're debugging:
+        An agent debugging TypeScript sees what <code>tsc</code> prints: the flattened
+        summary of a forty-line elaboration — <i>"Type X is not assignable to type Y."</i>
+        The actual cause is a declaration three levels down the compiler's reasoning,
+        often in another file, and it never reaches the context window. So the agent
+        guesses: a cast, an <code>any</code>, an edit at the use site. Each wrong guess
+        costs a full edit–compile–fail loop. <b>whytype_explain</b> returns the
+        compiler's own reasoning chain and the related declaration site as markdown —
+        the agent fixes the cause on the first loop.
       </p>
       <pre><span class="c"># the project needs its own typescript (>=5 &lt;7)</span>
 npm i -D whytype
 claude mcp add whytype -- npx whytype mcp</pre>
+      <pre><span class="c">// Cursor, Windsurf, or any MCP client — mcp.json:</span>
+{ "mcpServers": { "whytype": { "command": "npx", "args": ["whytype", "mcp"] } } }</pre>
       <p>Three tools appear:</p>
       <ul>
         <li><code>whytype_diagnostics</code> — compact error list: file, line, column, code.</li>
         <li><code>whytype_explain</code> — the full reasoning at a location: nested because-chain, inferred type arguments, which conditional branch fired and why.</li>
         <li><code>whytype_snippet</code> — explain a pasted snippet, no project needed.</li>
       </ul>
-      <div class="transcript">
-        <p><span class="turn">agent&gt;</span> tsc says: Type 'string' is not assignable to type 'number' — calls <code>whytype_explain(src/config.ts:12:5)</code></p>
-        <p><span class="turn">whytype&gt;</span> <span class="e">## error TS2322 — src/config.ts:12:5</span> … Because: TS2326 Types of property 'port' are incompatible… Related: src/shapes.ts:2:3 — 'port' is declared here.</p>
-        <p><span class="turn">agent&gt;</span> fixes the declaration site, not the symptom.</p>
+      <div class="compare">
+        <div class="compare-col is-without">
+          <span class="col-title">without</span>
+          <pre><span class="turn">tsc&gt;</span>   Type 'string' is not assignable
+       to type 'number'.  <span class="c">(line 4)</span>
+<span class="turn">agent&gt;</span> casts the value — <span class="c">as number</span>
+<span class="turn">tsc&gt;</span>   error moved to the consumer
+<span class="turn">agent&gt;</span> widens the field — <span class="c">any</span>
+<span class="turn">tsc&gt;</span>   clean, bug shipped
+<span class="turn">agent&gt;</span> …</pre>
+        </div>
+        <div class="compare-col">
+          <span class="col-title"><b>with whytype</b></span>
+          <pre><span class="turn">agent&gt;</span> whytype_explain(src/main.ts:4:30)
+<span class="turn">whytype&gt;</span>
+<span class="e">## error TS2322 — src/main.ts:4:30</span>
+
+Type 'string' is not assignable to type 'number'.
+
+```
+  2 |
+  3 | // Cross-file mismatch: `port` is declared in shapes.ts.
+&gt; 4 | export const cfg: Config = { port: "80", host: "localhost" };
+    |                              ^^^^
+  5 |
+  6 | // Generic inference at a call site.
+```
+
+Related:
+- <span class="e">src/shapes.ts:2:3</span> — The expected type comes from property 'port' which is declared here on type 'Config' (TS6500)
+
+**`port`** : `string`
+
+_typescript 6.0.3_
+<span class="turn">agent&gt;</span> fixes the declaration site. one loop.</pre>
+        </div>
       </div>
+      <p class="caption">
+        The "with whytype" block is real, unedited <code>whytype_explain</code> output
+        (the fixture lives in the repo at <code>spike/fixtures/demo-project</code>). Deeper
+        mismatches arrive as a nested <code>Because:</code> bullet chain, one bullet per
+        elaboration step.
+      </p>
 
       <h2 id="cli"><span class="k">02</span> CLI</h2>
       <pre>npx whytype src/app.ts:42:7   <span class="c"># explain one location</span>

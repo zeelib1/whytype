@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts && tsx spike/test-project.ts && npm run build:core && tsx spike/test-cli.ts && tsx spike/test-mcp.ts",
+    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts && tsx spike/test-diff.ts && tsx spike/test-project.ts && npm run build:core && tsx spike/test-cli.ts && tsx spike/test-mcp.ts",
     "build:core": "node core/build.mjs",
     "dev": "vite",
     "build": "vite build",

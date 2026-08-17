@@ -18,9 +18,11 @@ a virtual filesystem. Nothing leaves the tab. Sharing is a compressed
   with a gallery of the greatest hits of TS confusion (`examples` button).
 - **VS Code extension** (`extension/`) — renders the same because-chain for
   your own project's tsserver diagnostics via a "Why?" quick fix.
-- **`whytype` on npm** (`core/`) — the extraction engine as a library:
-  diagnostics as explain-trees, generic inference bindings, conditional-type
-  traces with real checker verdicts.
+- **`whytype` on npm** (`core/`) — MCP server for agents (`npx whytype mcp`:
+  whytype_diagnostics / whytype_explain / whytype_snippet), CLI
+  (`npx whytype file:line:col`, `whytype check`), and the extraction engine
+  as a library: diagnostics as explain-trees, generic inference bindings,
+  conditional-type traces with real checker verdicts.
 
 ## Architecture
 

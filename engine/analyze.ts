@@ -287,7 +287,7 @@ function traceConditional(
     extendsText: string | null;
     naked: boolean;
     probe?: string;
-    memberProbes?: { text: string; probe: string }[];
+    memberProbes?: { text: string; probe: string; resultProbe?: string }[];
   }
   const plans: Plan[] = [];
   const collect = (tn: ts.TypeNode) => {
@@ -310,10 +310,24 @@ function traceConditional(
     if (!plan.checkText || !plan.extendsText || !plan.checkType) continue;
     if (plan.naked && plan.checkType.flags & (ts.TypeFlags.Any | ts.TypeFlags.Never)) continue;
     if (plan.naked && plan.checkType.isUnion()) {
+      // Only the top-level conditional's distribution equals re-instantiating
+      // the alias per member, so only there can a per-member result be probed.
+      const nakedName = nakedParamName(plan.cond.checkType, mapping);
+      const slot = plan.cond === aliasDecl.type && nakedName
+        ? params.findIndex((p) => p.name.text === nakedName)
+        : -1;
+      const refName = refNode.typeName.getText(source);
+      const argTexts = args.map((a) => a.getText(source));
       plan.memberProbes = plan.checkType.types.map((m) => {
         const probe = `__WT_P${probeId++}`;
         probeSrc += `type ${probe} = [${typeToString(m)}] extends [${plan.extendsText}] ? "__WT_T" : "__WT_F";\n`;
-        return { text: typeToString(m), probe };
+        let resultProbe: string | undefined;
+        if (slot >= 0) {
+          resultProbe = `__WT_R${probeId++}`;
+          const memberArgs = argTexts.map((t, i) => (i === slot ? typeToString(m) : t));
+          probeSrc += `type ${resultProbe} = ${refName}<${memberArgs.join(", ")}>;\n`;
+        }
+        return { text: typeToString(m), probe, resultProbe };
       });
     } else {
       plan.probe = `__WT_P${probeId++}`;
@@ -324,14 +338,26 @@ function traceConditional(
 
   // Pass 2: one extra program answers every probe with real checker semantics.
   const verdictOf = new Map<string, "true" | "false" | "both" | "unknown">();
+  const resultOf = new Map<string, string>();
   if (probeSrc) {
     const probed = probe(source.text + "\n" + probeSrc);
     probed.source.forEachChild((st) => {
-      if (!ts.isTypeAliasDeclaration(st) || !st.name.text.startsWith("__WT_P")) return;
-      const s = probed.checker.typeToString(probed.checker.getTypeAtLocation(st.name));
-      const hasT = s.includes('"__WT_T"');
-      const hasF = s.includes('"__WT_F"');
-      verdictOf.set(st.name.text, hasT && hasF ? "both" : hasT ? "true" : hasF ? "false" : "unknown");
+      if (!ts.isTypeAliasDeclaration(st)) return;
+      if (st.name.text.startsWith("__WT_P")) {
+        const s = probed.checker.typeToString(probed.checker.getTypeAtLocation(st.name));
+        const hasT = s.includes('"__WT_T"');
+        const hasF = s.includes('"__WT_F"');
+        verdictOf.set(st.name.text, hasT && hasF ? "both" : hasT ? "true" : hasF ? "false" : "unknown");
+      } else if (st.name.text.startsWith("__WT_R")) {
+        resultOf.set(
+          st.name.text,
+          probed.checker.typeToString(
+            probed.checker.getTypeAtLocation(st.name),
+            undefined,
+            ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias
+          )
+        );
+      }
     });
   }
 
@@ -361,6 +387,7 @@ function traceConditional(
       step.members = plan.memberProbes.map((m) => ({
         text: m.text,
         verdict: verdictOf.get(m.probe) === "true" ? ("true" as const) : ("false" as const),
+        result: m.resultProbe ? resultOf.get(m.resultProbe) : undefined,
       }));
     } else if (plan.probe) {
       const v = verdictOf.get(plan.probe) ?? "unknown";

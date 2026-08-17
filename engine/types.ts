@@ -61,8 +61,9 @@ export interface ConditionalStep {
   /** The extends target after substitution, e.g. "string" — null if unresolvable. */
   extendsResolved: string | null;
   verdict: "true" | "false" | "both" | "distributes" | "never" | "unknown";
-  /** Per-member verdicts when a union distributes. */
-  members?: { text: string; verdict: "true" | "false" }[];
+  /** Per-member verdicts when a union distributes. `result` is what the whole
+   *  alias resolves to for that member alone (top-level distribution only). */
+  members?: { text: string; verdict: "true" | "false"; result?: string }[];
   /** Declared text of the branch the verdict selects (absent for both/distributes/unknown). */
   branchTakenText?: string;
 }
