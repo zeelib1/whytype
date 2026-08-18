@@ -25,8 +25,16 @@ function resolveTypescript(): { mod: typeof import("typescript-strada"); entry: 
   );
 }
 
-const resolved = resolveTypescript();
+// Resolution is deferred to first use so metadata commands (--help, --version,
+// init) work in projects that have not installed typescript yet.
+let cached: { mod: typeof import("typescript-strada"); entry: string } | undefined;
+const resolved = () => (cached ??= resolveTypescript());
 
-export default resolved.mod;
+export default new Proxy({} as Record<PropertyKey, unknown>, {
+  get: (_, key) => (resolved().mod as unknown as Record<PropertyKey, unknown>)[key],
+}) as unknown as typeof import("typescript-strada");
+
 /** Absolute path of the resolved lib/typescript.js — its dir holds lib.*.d.ts. */
-export const typescriptEntryPath: string = resolved.entry;
+export function typescriptEntryPath(): string {
+  return resolved().entry;
+}

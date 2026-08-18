@@ -2,10 +2,9 @@
   "name": "whytype-playground",
   "private": true,
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "WhyType playground + engine workspace (the npm package lives in core/)",
   "scripts": {
-    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts && tsx spike/test-diff.ts && tsx spike/test-project.ts && npm run build:core && tsx spike/test-cli.ts && tsx spike/test-mcp.ts",
+    "test": "tsx spike/test-engine.ts && tsx spike/test-examples.ts && tsx spike/test-diff.ts && tsx spike/test-project.ts && npm run build:core && tsx spike/test-cli.ts && tsx spike/test-init.ts && tsx spike/test-mcp.ts",
     "build:core": "node core/build.mjs",
     "dev": "vite",
     "build": "vite build",
@@ -14,8 +13,8 @@
     "deploy": "vite build && wrangler pages deploy"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Eldora Studio (https://eldora.studio)",
+  "license": "MIT",
   "type": "module",
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

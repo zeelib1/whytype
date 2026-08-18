@@ -2,6 +2,7 @@
  * Harness for the MCP server: a real SDK client over stdio against the
  * built CLI (`whytype mcp`) in the demo fixture. Run: npx tsx spike/test-mcp.ts
  */
+import fs from "node:fs";
 import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -43,6 +44,49 @@ check("descriptions are written for the model", tools.every((t) => (t.descriptio
 const diag = await client.callTool({ name: "whytype_diagnostics", arguments: {} });
 check("diagnostics lists TS2322 compactly", asText(diag).includes("TS2322"), asText(diag));
 check("diagnostics paths are relative", asText(diag).includes("src/main.ts:"), asText(diag));
+check(
+  "header names the ts version and tsconfig",
+  /^\d+ error\(s\), \d+ other — typescript \d.* — tsconfig\.json/.test(asText(diag)),
+  asText(diag)
+);
+
+// ── pagination ─────────────────────────────────────────────────────────────
+const page1 = await client.callTool({ name: "whytype_diagnostics", arguments: { limit: 1 } });
+check(
+  "limit=1 shows one entry and a pagination trailer",
+  asText(page1).includes("showing 1–1 of 2 — call again with offset=1"),
+  asText(page1)
+);
+const page2 = await client.callTool({
+  name: "whytype_diagnostics",
+  arguments: { limit: 1, offset: 1 },
+});
+check(
+  "offset=1 shows the other entry",
+  asText(page2).includes("showing 2–2 of 2") &&
+    asText(page1).split("\n")[1] !== asText(page2).split("\n")[1],
+  asText(page2)
+);
+
+// ── per-call project param from a foreign cwd ──────────────────────────────
+const viaProject = await client.callTool({
+  name: "whytype_diagnostics",
+  arguments: { project: path.join(fixture, "tsconfig.json") },
+});
+check("explicit project param works", asText(viaProject).includes("TS2322"), asText(viaProject));
+
+// ── cache invalidation: edits between calls are seen ───────────────────────
+const mainPath = path.join(fixture, "src", "main.ts");
+const originalMain = fs.readFileSync(mainPath, "utf8");
+try {
+  fs.writeFileSync(mainPath, originalMain + 'export const oops: number = "x";\n');
+  const after = await client.callTool({ name: "whytype_diagnostics", arguments: {} });
+  check("a new error appears after an edit", asText(after).includes("oops") || asText(after).includes("3 error"), asText(after));
+} finally {
+  fs.writeFileSync(mainPath, originalMain);
+}
+const restored = await client.callTool({ name: "whytype_diagnostics", arguments: {} });
+check("the error disappears after the revert", asText(restored).startsWith("2 error(s)"), asText(restored));
 
 // ── whytype_explain at the error line ──────────────────────────────────────
 const exp = await client.callTool({

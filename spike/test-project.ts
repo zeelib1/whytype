@@ -4,7 +4,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { createProject } from "../engine/node";
+import { createProject, createProjectLoader } from "../engine/node";
 import { renderDiagnostic } from "../engine/render";
 
 const fixture = path.join(import.meta.dirname, "fixtures", "demo-project");
@@ -77,6 +77,21 @@ console.log("\n" + md + "\n");
 check("markdown has the header", md.includes("## error TS2322 — src/main.ts:"));
 check("markdown has a code frame marker", md.includes("> ") && md.includes("^"));
 check("markdown has a Related entry with shapes.ts", /Related:[\s\S]*shapes\.ts:\d+:\d+/.test(md));
+
+// ── loader: cache hit when untouched, rebuild after a touch ────────────────
+const loader = createProjectLoader({ rootDir: fixture });
+const p1 = loader.load();
+check("loader.load() twice returns the same Project when nothing changed", loader.load() === p1);
+const stat = fs.statSync(mainPath);
+try {
+  fs.utimesSync(mainPath, stat.atime, new Date(stat.mtimeMs + 1500));
+  const p2 = loader.load();
+  check("loader rebuilds after main.ts mtime changes", p2 !== p1);
+  check("rebuilt project still sees both errors", p2.analyze().length === 2);
+  check("loader caches the rebuilt project", loader.load() === p2);
+} finally {
+  fs.utimesSync(mainPath, stat.atime, stat.mtime);
+}
 
 console.log(failures ? `\n✗ ${failures} failure(s)` : "\n✓ all project-mode checks pass");
 process.exit(failures ? 1 : 0);

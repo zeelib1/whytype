@@ -14,7 +14,7 @@ for (const f of fs.readdirSync(libDir)) {
   }
 }
 initEngine(libs);
-console.log(`engine typescript@${tsVersion}, ${libs.size} libs\n`);
+console.log(`engine typescript@${tsVersion()}, ${libs.size} libs\n`);
 
 const code = `
 type IsString<T> = T extends string ? "yes" : "no";

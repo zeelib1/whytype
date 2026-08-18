@@ -7,11 +7,16 @@
 
 ## For agents
 
+- Setup: `npm i -D whytype && npx whytype init` — writes .mcp.json (Claude
+  Code), .cursor/mcp.json when the repo uses Cursor, and an instruction block
+  into an existing CLAUDE.md/AGENTS.md; `--hooks` adds a Claude Code
+  PostToolUse check that reports new errors after every edit. Idempotent.
 - MCP server: `npx whytype mcp` (stdio). Tools: whytype_diagnostics (compact
-  error list), whytype_explain (full reasoning at file:line:col),
-  whytype_snippet (explain pasted code, no project needed).
-- Claude Code: `claude mcp add whytype -- npx whytype mcp` (run in the
-  project being debugged; it needs a local `typescript` install).
+  error list; errorsOnly/offset/limit params; `project` targets a monorepo
+  package's tsconfig), whytype_explain (full reasoning at file:line:col; also
+  takes `project`), whytype_snippet (explain pasted code, no project needed).
+- Claude Code manual route: `claude mcp add whytype -- npx whytype mcp` (run
+  in the project being debugged; it needs a local `typescript` install).
 - CLI: `npx whytype <file>:<line>:<col>` | `npx whytype check` |
   `--json` for stable structured output. Exit codes: 0 clean, 1 errors, 2 usage.
 - Returns are markdown: `## error TS<code> — file:line:col`, a code frame, a

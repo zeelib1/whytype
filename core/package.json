@@ -1,7 +1,19 @@
 {
   "name": "whytype",
-  "version": "0.1.0",
-  "description": "Extract the TypeScript compiler's reasoning: diagnostics as explain-trees, generic inference bindings, and conditional-type traces with real checker verdicts.",
+  "version": "0.2.0",
+  "description": "Give coding agents the TypeScript compiler's actual reasoning — an MCP server and CLI that turn type errors into because-chains pointing at the declaration to fix. Also a library: explain-trees, inference bindings, conditional-type traces.",
+  "keywords": [
+    "typescript",
+    "mcp",
+    "mcp-server",
+    "claude-code",
+    "cursor",
+    "ai-agents",
+    "typescript-errors",
+    "diagnostics",
+    "compiler",
+    "developer-tools"
+  ],
   "license": "MIT",
   "author": "Eldora Studio (https://eldora.studio)",
   "repository": {
@@ -40,6 +52,11 @@
   },
   "peerDependencies": {
     "typescript": ">=5.0 <7"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

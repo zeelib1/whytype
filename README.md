@@ -1,28 +1,34 @@
 # WhyType
 
-**The compiler, explaining itself.** An interactive visual debugger for
-TypeScript types: click an error and read the checker's reasoning as a
-"because" chain; put the cursor in a generic call to see what every type
-parameter was inferred as; trace which branch of a conditional type fired —
-including distribution over unions, `any` taking both branches, and `never`.
+**The compiler, explaining itself.** An agent debugging TypeScript sees what
+`tsc` prints: the flattened summary of a forty-line elaboration. The actual
+cause — a declaration three levels down the reasoning, often in another file —
+never reaches the context window, so the agent guesses: a cast, an `any`,
+another wasted edit–compile–fail loop. WhyType extracts the compiler's own
+reasoning — because-chains, inference bindings, conditional-type verdicts —
+and hands it to whoever is debugging, agent or human:
 
-**Playground: [whytype.dev](https://whytype.dev)**
+```sh
+npm i -D whytype && npx whytype init   # MCP server registered; agents stop guessing
+```
 
-Runs entirely client-side: the TypeScript compiler lives in a web worker with
-a virtual filesystem. Nothing leaves the tab. Sharing is a compressed
-`#code/...` URL (same format as the official TS playground).
+**Playground: [whytype.dev](https://whytype.dev)** · **Docs:
+[whytype.dev/docs](https://whytype.dev/docs/)** · **npm:
+[whytype](https://www.npmjs.com/package/whytype)**
 
 ## Parts
 
-- **Playground** — [whytype.dev](https://whytype.dev),
-  with a gallery of the greatest hits of TS confusion (`examples` button).
+- **`whytype` on npm** (`core/`) — MCP server for agents (`npx whytype mcp`:
+  whytype_diagnostics / whytype_explain / whytype_snippet), one-command setup
+  (`npx whytype init`, `--hooks` for a Claude Code PostToolUse check), CLI
+  (`npx whytype file:line:col`, `whytype check`), and the extraction engine
+  as a library.
+- **Playground** — [whytype.dev](https://whytype.dev): click an error, read
+  the reasoning; a gallery of the greatest hits of TS confusion (`examples`
+  button). Runs entirely client-side — the compiler lives in a web worker,
+  nothing leaves the tab; sharing is a compressed `#code/...` URL.
 - **VS Code extension** (`extension/`) — renders the same because-chain for
   your own project's tsserver diagnostics via a "Why?" quick fix.
-- **`whytype` on npm** (`core/`) — MCP server for agents (`npx whytype mcp`:
-  whytype_diagnostics / whytype_explain / whytype_snippet), CLI
-  (`npx whytype file:line:col`, `whytype check`), and the extraction engine
-  as a library: diagnostics as explain-trees, generic inference bindings,
-  conditional-type traces with real checker verdicts.
 
 ## Architecture
 

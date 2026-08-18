@@ -106,15 +106,27 @@
       </p>
       <pre><span class="c"># the project needs its own typescript (>=5 &lt;7)</span>
 npm i -D whytype
-claude mcp add whytype -- npx whytype mcp</pre>
-      <pre><span class="c">// Cursor, Windsurf, or any MCP client — mcp.json:</span>
-{ "mcpServers": { "whytype": { "command": "npx", "args": ["whytype", "mcp"] } } }</pre>
+npx whytype init              <span class="c"># writes .mcp.json + Cursor config + CLAUDE.md block</span></pre>
+      <p class="muted">
+        <code>init</code> is idempotent and never overwrites config it didn't write
+        (<code>--dry-run</code> previews). Manual routes still work:
+        <code>claude mcp add whytype -- npx whytype mcp</code>, or for Cursor, Windsurf, and
+        any other MCP client:
+        <code>{ "mcpServers": { "whytype": { "command": "npx", "args": ["whytype", "mcp"] } } }</code>
+      </p>
       <p>Three tools appear:</p>
       <ul>
-        <li><code>whytype_diagnostics</code> — compact error list: file, line, column, code.</li>
+        <li><code>whytype_diagnostics</code> — compact error list: file, line, column, code — with a <code>typescript X — tsconfig.json</code> header; <code>offset</code>/<code>limit</code> paginate, <code>project</code> targets a monorepo package.</li>
         <li><code>whytype_explain</code> — the full reasoning at a location: nested because-chain, inferred type arguments, which conditional branch fired and why.</li>
         <li><code>whytype_snippet</code> — explain a pasted snippet, no project needed.</li>
       </ul>
+      <p>
+        <b>Hooks — zero tool calls:</b> <code>npx whytype init --hooks</code> wires a Claude
+        Code <code>PostToolUse</code> hook: after every edit, <code>whytype hook</code>
+        re-checks the edited file and feeds new errors back as because-chains
+        automatically. Each hook run is a cold compile (seconds on big projects) — hooks
+        surface regressions, the MCP tools are the fast investigation loop.
+      </p>
       <div class="compare">
         <div class="compare-col is-without">
           <span class="col-title">without</span>

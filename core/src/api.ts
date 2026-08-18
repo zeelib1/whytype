@@ -11,8 +11,8 @@ import {
   inspect as inspectSnippet,
 } from "../../engine/analyze";
 
-export { createProject } from "../../engine/project";
-export type { ExplainQuery, Position, Project } from "../../engine/project";
+export { createProject, createProjectLoader } from "../../engine/project";
+export type { ExplainQuery, Position, Project, ProjectLoader } from "../../engine/project";
 export { renderDiagnostic, renderExplain, renderInspect } from "../../engine/render";
 export type { DiagnosticInfo, ExplainResult, InspectResult } from "../../engine/types";
 export { tsVersion } from "../../engine/analyze";
@@ -32,14 +32,14 @@ let snippetReady = false;
 /** Loads default libs from the resolved typescript install, once. */
 function ensureSnippetEngine(): void {
   if (snippetReady) return;
-  const libDir = path.dirname(typescriptEntryPath);
+  const libDir = path.dirname(typescriptEntryPath());
   const libs = new Map<string, string>();
   for (const f of fs.readdirSync(libDir)) {
     if (f.startsWith("lib") && f.endsWith(".d.ts")) {
       libs.set("/lib/" + f, fs.readFileSync(path.join(libDir, f), "utf8"));
     }
   }
-  if (!libs.size) throw new CliError(`no lib.*.d.ts found next to ${typescriptEntryPath}`);
+  if (!libs.size) throw new CliError(`no lib.*.d.ts found next to ${typescriptEntryPath()}`);
   initEngine(libs);
   snippetReady = true;
 }

@@ -23,4 +23,4 @@ self.onmessage = (ev: MessageEvent<EngineRequest>) => {
   }
 };
 
-post({ id: 0, kind: "ready", tsVersion });
+post({ id: 0, kind: "ready", tsVersion: tsVersion() });

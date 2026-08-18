@@ -4,17 +4,19 @@
  * Stdout is the protocol — nothing may print to it.
  */
 import fs from "node:fs";
+import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import {
-  createProject,
+  createProjectLoader,
   renderDiagnostic,
   renderExplain,
   renderInspect,
   snippetAnalyze,
   snippetInspect,
   type DiagnosticInfo,
+  type ProjectLoader,
 } from "./api";
 
 interface McpOptions {
@@ -40,10 +42,38 @@ export async function runMcpServer(opts: McpOptions): Promise<void> {
   // Belt and braces: anything that thinks it is logging goes to stderr.
   console.log = console.error;
 
-  // A fresh program per call — agents edit files between calls, and the
-  // program is immutable once built.
-  const openProject = () =>
-    createProject({ tsconfigPath: opts.tsconfigPath, rootDir: process.cwd() });
+  // One loader per tsconfig: each call re-checks the disk (config re-parse +
+  // mtime sweep) and rebuilds only on a real change, reusing the old program.
+  const loaders = new Map<string, ProjectLoader>();
+  const openProject = (project?: string) => {
+    let key = "(default)";
+    let tsconfigPath = opts.tsconfigPath;
+    let rootDir = process.cwd();
+    if (project) {
+      const resolved = path.resolve(project);
+      key = resolved;
+      // A directory means "find the tsconfig there"; a file is the tsconfig.
+      if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
+        tsconfigPath = undefined;
+        rootDir = resolved;
+      } else {
+        tsconfigPath = resolved;
+      }
+    }
+    let loader = loaders.get(key);
+    if (!loader) {
+      loader = createProjectLoader({ tsconfigPath, rootDir });
+      loaders.set(key, loader);
+    }
+    return loader.load();
+  };
+
+  const projectParam = z
+    .string()
+    .optional()
+    .describe(
+      "tsconfig.json path (or a package directory) — use for a package inside a monorepo; default: the project the server was started in"
+    );
 
   const server = new McpServer({ name: "whytype", version: opts.version });
 
@@ -57,15 +87,35 @@ export async function runMcpServer(opts: McpOptions): Promise<void> {
         "specific location to get the compiler's full reasoning chain.",
       inputSchema: {
         file: z.string().optional().describe("Limit to one file (absolute or relative path)"),
+        project: projectParam,
+        errorsOnly: z
+          .boolean()
+          .optional()
+          .describe("default true; false also includes warnings/suggestions/messages"),
+        offset: z.number().int().min(0).optional().describe("pagination offset into the list"),
+        limit: z.number().int().min(1).max(500).optional().describe("max entries (default 100)"),
       },
     },
-    async ({ file }) => {
+    async ({ file, project, errorsOnly, offset, limit }) => {
       try {
-        const diags = openProject().analyze(file);
-        if (!diags.length) return text("No TypeScript errors.");
-        const cap = 100;
-        const lines = diags.slice(0, cap).map(compactLine);
-        if (diags.length > cap) lines.push(`… ${diags.length - cap} more (truncated)`);
+        const proj = openProject(project);
+        const all = proj.analyze(file);
+        const errors = all.filter((d) => d.category === "error");
+        const diags = errorsOnly === false ? all : errors;
+        const header = `${errors.length} error(s), ${all.length - errors.length} other — typescript ${proj.tsVersion} — ${rel(proj.configPath)}`;
+        if (!diags.length) return text(`${header}\n${errorsOnly === false ? "Nothing to list." : "No TypeScript errors."}`);
+        const from = offset ?? 0;
+        const cap = limit ?? 100;
+        const page = diags.slice(from, from + cap);
+        const lines = [header, ...page.map(compactLine)];
+        if (from > 0 || from + page.length < diags.length) {
+          lines.push(
+            `showing ${from + 1}–${from + page.length} of ${diags.length}` +
+              (from + page.length < diags.length
+                ? ` — call again with offset=${from + page.length}`
+                : "")
+          );
+        }
         return text(lines.join("\n"));
       } catch (e) {
         return fail(e);
@@ -88,12 +138,12 @@ export async function runMcpServer(opts: McpOptions): Promise<void> {
         file: z.string().describe("File path (absolute or relative)"),
         line: z.number().int().min(1).describe("1-based line"),
         column: z.number().int().min(1).describe("1-based column"),
+        project: projectParam,
       },
     },
-    async ({ file, line, column }) => {
+    async ({ file, line, column, project }) => {
       try {
-        const project = openProject();
-        const res = project.explain({ file, position: { line, column } });
+        const res = openProject(project).explain({ file, position: { line, column } });
         // Focus on the queried line when it has diagnostics; else keep them all.
         const onLine = res.diagnostics.filter((d) => d.startLine === line);
         if (onLine.length) res.diagnostics = onLine;

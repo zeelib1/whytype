@@ -15,7 +15,9 @@ import type {
   RelatedInfo,
 } from "./types";
 
-export const tsVersion: string = ts.version;
+export function tsVersion(): string {
+  return ts.version;
+}
 
 /** Injected by the host (Vite worker bundles libs, the Node test reads disk). */
 let libFiles = new Map<string, string>();
@@ -28,12 +30,17 @@ export function initEngine(libs: Map<string, string>): void {
 
 const FILE = "/main.ts";
 
-const compilerOptions: ts.CompilerOptions = {
-  strict: true,
-  target: ts.ScriptTarget.ES2022,
-  module: ts.ModuleKind.ESNext,
-  noEmit: true,
-};
+// Built on first use — module load must not touch `ts` (the Node bundle
+// resolves typescript lazily so metadata-only CLI runs work without it).
+let cachedOptions: ts.CompilerOptions | undefined;
+function compilerOptions(): ts.CompilerOptions {
+  return (cachedOptions ??= {
+    strict: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    noEmit: true,
+  });
+}
 
 const libCache = new Map<string, ts.SourceFile>();
 
@@ -72,7 +79,7 @@ let session: Session | null = null;
 
 function makeProgram(code: string): Omit<Session, "code"> {
   const source = ts.createSourceFile(FILE, code, ts.ScriptTarget.ES2022, true);
-  const program = ts.createProgram([FILE], compilerOptions, createHost(source));
+  const program = ts.createProgram([FILE], compilerOptions(), createHost(source));
   return { program, source, checker: program.getTypeChecker() };
 }
 

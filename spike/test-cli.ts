@@ -4,6 +4,7 @@
  */
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 const root = path.join(import.meta.dirname, "..");
@@ -25,9 +26,16 @@ function check(what: string, ok: boolean, extra?: unknown) {
   if (!ok) failures++;
 }
 
-function run(args: string[]): { code: number; stdout: string; stderr: string } {
+function run(
+  args: string[],
+  opts: { input?: string; cwd?: string } = {}
+): { code: number; stdout: string; stderr: string } {
   try {
-    const stdout = execFileSync("node", [cli, ...args], { cwd: fixture, encoding: "utf8" });
+    const stdout = execFileSync("node", [cli, ...args], {
+      cwd: opts.cwd ?? fixture,
+      encoding: "utf8",
+      input: opts.input,
+    });
     return { code: 0, stdout, stderr: "" };
   } catch (e) {
     const err = e as { status?: number; stdout?: string; stderr?: string };
@@ -68,6 +76,29 @@ check("unknown flag exits 2", run(["check", "--nope"]).code === 2);
 check("no args exits 2 and prints usage", (() => { const r = run([]); return r.code === 2 && r.stdout.includes("Usage:"); })());
 check("missing file exits 2", run(["explain", "src/nope.ts"]).code === 2);
 check("--version exits 0", (() => { const r = run(["--version"]); return r.code === 0 && /^\d+\.\d+\.\d+$/.test(r.stdout.trim()); })());
+
+// ── hook: Claude Code PostToolUse contract ─────────────────────────────────
+const mainPath = path.join(fixture, "src", "main.ts");
+const hookBad = run(["hook"], { input: JSON.stringify({ tool_input: { file_path: mainPath } }) });
+check("hook on a failing file exits 2", hookBad.code === 2, hookBad);
+check("hook reports on stderr, not stdout", hookBad.stdout === "" && hookBad.stderr.includes("TS2322"), hookBad);
+check("hook renders a because chain", hookBad.stderr.includes("Because:"), hookBad.stderr);
+const hookClean = run(["hook"], { input: JSON.stringify({ tool_input: { file_path: path.join(fixture, "src", "clean.ts") } }) });
+check("hook on a clean file exits 0 silently", hookClean.code === 0 && hookClean.stderr === "", hookClean);
+check("hook ignores non-TS files", run(["hook"], { input: JSON.stringify({ tool_input: { file_path: "README.md" } }) }).code === 0);
+check("hook swallows garbage input", run(["hook"], { input: "not json {" }).code === 0);
+
+// ── metadata commands must not need typescript ─────────────────────────────
+const bare = fs.mkdtempSync(path.join(os.tmpdir(), "whytype-bare-"));
+try {
+  check("--version works without typescript", run(["--version"], { cwd: bare }).code === 0);
+  const dry = run(["init", "--dry-run"], { cwd: bare });
+  check("init --dry-run works without typescript", dry.code === 0, dry);
+  check("init --dry-run writes nothing", fs.readdirSync(bare).length === 0, fs.readdirSync(bare));
+  check("init advises installing typescript", dry.stdout.includes("npm i -D typescript@6"), dry.stdout);
+} finally {
+  fs.rmSync(bare, { recursive: true, force: true });
+}
 
 console.log(failures ? `\n✗ ${failures} failure(s)` : "\n✓ all CLI checks pass");
 process.exit(failures ? 1 : 0);

@@ -14,6 +14,7 @@ import {
   type DiagnosticInfo,
   type Project,
 } from "./api";
+import { runInit } from "./init";
 
 const USAGE = `whytype — the TypeScript compiler, explaining itself
 
@@ -22,11 +23,17 @@ Usage:
   whytype explain <file>[:line[:col]] [--line N --col N]
   whytype check [path]            all project diagnostics as because-trees
   whytype mcp                     start the MCP server on stdio (for agents)
+  whytype init [--hooks]          register the MCP server for this repo
+                                  (.mcp.json, Cursor config, CLAUDE.md block)
+  whytype hook                    Claude Code PostToolUse hook: reads the edit
+                                  event on stdin, reports new errors on stderr
 
 Options:
   --project <tsconfig>   explicit tsconfig.json (default: found upward from cwd)
   --json                 raw wire types instead of markdown
   --line N, --col N      1-based position (alternative to the :line:col suffix)
+  --hooks                init: also wire the PostToolUse hook into .claude/settings.json
+  --dry-run              init: print what would change, write nothing
   -h, --help             this help
   -v, --version          print version
 
@@ -37,6 +44,8 @@ interface Values {
   project?: string;
   line?: string;
   col?: string;
+  hooks?: boolean;
+  "dry-run"?: boolean;
   help?: boolean;
   version?: boolean;
 }
@@ -119,6 +128,48 @@ function cmdCheck(target: string | undefined, values: Values): number {
   return hasErrors(diags) ? 1 : 0;
 }
 
+/**
+ * Claude Code PostToolUse hook: reads the tool event from stdin, re-checks the
+ * edited file, and reports because-chains on stderr with exit 2 (the blocking
+ * feedback convention). Anything unexpected — non-TS file, unparsable event,
+ * missing tsconfig/typescript — exits 0 silently: a hook must never wedge the
+ * agent's edit loop.
+ */
+async function cmdHook(values: Values): Promise<number> {
+  let raw = "";
+  for await (const chunk of process.stdin) raw += chunk;
+  let file: unknown;
+  try {
+    const evt = JSON.parse(raw) as { tool_input?: { file_path?: unknown }; file_path?: unknown };
+    file = evt?.tool_input?.file_path ?? evt?.file_path;
+  } catch {
+    return 0;
+  }
+  if (typeof file !== "string") return 0;
+  if (!/\.(ts|tsx|mts|cts)$/.test(file) || file.endsWith(".d.ts")) return 0;
+  try {
+    const project = createProject({
+      tsconfigPath: values.project,
+      rootDir: path.dirname(path.resolve(file)),
+    });
+    const errors = project.analyze(file).filter((d) => d.category === "error");
+    if (!errors.length) return 0;
+    const sources = sourcesFor(errors);
+    for (const d of errors.slice(0, 3)) {
+      console.error(
+        relativize(renderDiagnostic(d, { sourceText: d.file ? sources.get(d.file) : undefined }))
+      );
+      console.error();
+    }
+    if (errors.length > 3) {
+      console.error(`…and ${errors.length - 3} more — run: npx whytype check ${file}`);
+    }
+    return 2;
+  } catch {
+    return 0;
+  }
+}
+
 async function main(): Promise<number> {
   let parsed: { values: Values; positionals: string[] };
   try {
@@ -129,6 +180,8 @@ async function main(): Promise<number> {
         project: { type: "string" },
         line: { type: "string" },
         col: { type: "string" },
+        hooks: { type: "boolean" },
+        "dry-run": { type: "boolean" },
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
       },
@@ -152,6 +205,8 @@ async function main(): Promise<number> {
     await runMcpServer({ tsconfigPath: values.project, version: pkg.version });
     return 0;
   }
+  if (cmd === "init") return runInit({ hooks: values.hooks, dryRun: values["dry-run"] });
+  if (cmd === "hook") return cmdHook(values);
   if (cmd === "check") return cmdCheck(rest[0], values);
   if (cmd === "explain") {
     if (!rest[0]) throw new CliError(`explain needs a file argument\n\n${USAGE}`);

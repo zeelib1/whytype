@@ -40,7 +40,12 @@ export interface Project {
   explainMarkdown(q: ExplainQuery): string;
 }
 
-export function createProject(opts: ProjectOptions = {}): Project {
+export interface ProjectLoader {
+  /** Cached Project when nothing changed on disk; otherwise rebuilds, reusing the old ts.Program. */
+  load(): Project;
+}
+
+function findConfigPath(opts: ProjectOptions): string {
   const cwd = opts.rootDir ?? ts.sys.getCurrentDirectory();
   const configPath =
     opts.tsconfigPath ?? ts.findConfigFile(cwd, ts.sys.fileExists, "tsconfig.json");
@@ -51,7 +56,10 @@ export function createProject(opts: ProjectOptions = {}): Project {
         : `no tsconfig.json found upward from ${cwd}`
     );
   }
+  return configPath;
+}
 
+function parseConfig(configPath: string): ts.ParsedCommandLine {
   const host: ts.ParseConfigFileHost = {
     ...ts.sys,
     onUnRecoverableConfigFileDiagnostic: (d) => {
@@ -60,10 +68,71 @@ export function createProject(opts: ProjectOptions = {}): Project {
   };
   const parsed = ts.getParsedCommandLineOfConfigFile(configPath, { noEmit: true }, host);
   if (!parsed) throw new Error(`failed to parse ${configPath}`);
+  return parsed;
+}
 
+export function createProject(opts: ProjectOptions = {}): Project {
+  const configPath = findConfigPath(opts);
+  return buildProject(configPath, parseConfig(configPath), opts).project;
+}
+
+/**
+ * A Project cache for long-lived hosts (the MCP server): each load() re-parses
+ * the config (re-running include globs, so added/removed files are seen) and
+ * compares options + file list + mtimes; only a real change rebuilds, and the
+ * rebuild hands TS the previous program for structural reuse.
+ */
+export function createProjectLoader(opts: ProjectOptions = {}): ProjectLoader {
+  let snap:
+    | {
+        configPath: string;
+        optionsKey: string;
+        filesKey: string;
+        mtimes: Map<string, number>;
+        program: ts.Program;
+        project: Project;
+      }
+    | undefined;
+  const mtime = (f: string) => ts.sys.getModifiedTime?.(f)?.getTime() ?? -1;
+
+  return {
+    load() {
+      const env = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+        .process?.env;
+      const noCache = env?.WHYTYPE_MCP_NO_CACHE === "1";
+      const configPath =
+        snap && ts.sys.fileExists(snap.configPath) ? snap.configPath : findConfigPath(opts);
+      const parsed = parseConfig(configPath);
+      const optionsKey = JSON.stringify(parsed.options);
+      const filesKey = parsed.fileNames.join("\n");
+      const mtimes = new Map([configPath, ...parsed.fileNames].map((f) => [f, mtime(f)]));
+      if (
+        !noCache &&
+        snap &&
+        snap.configPath === configPath &&
+        snap.optionsKey === optionsKey &&
+        snap.filesKey === filesKey &&
+        [...mtimes].every(([f, t]) => snap!.mtimes.get(f) === t)
+      ) {
+        return snap.project;
+      }
+      const built = buildProject(configPath, parsed, opts, noCache ? undefined : snap?.program);
+      snap = { configPath, optionsKey, filesKey, mtimes, ...built };
+      return built.project;
+    },
+  };
+}
+
+function buildProject(
+  configPath: string,
+  parsed: ts.ParsedCommandLine,
+  opts: ProjectOptions,
+  oldProgram?: ts.Program
+): { project: Project; program: ts.Program } {
+  const cwd = opts.rootDir ?? ts.sys.getCurrentDirectory();
   // setParentNodes MUST be true: the inspectors walk .parent chains.
   const compilerHost = ts.createCompilerHost(parsed.options, true);
-  const program = ts.createProgram(parsed.fileNames, parsed.options, compilerHost);
+  const program = ts.createProgram(parsed.fileNames, parsed.options, compilerHost, oldProgram);
   const caseSensitive = compilerHost.useCaseSensitiveFileNames();
 
   const canonical = (p: string) => {
@@ -213,5 +282,5 @@ export function createProject(opts: ProjectOptions = {}): Project {
       return renderExplain(res, sources);
     },
   };
-  return project;
+  return { project, program };
 }
