@@ -1,0 +1,42 @@
+# main = production. Every push to main builds and deploys to Cloudflare Pages.
+# Project name + output dir come from wrangler.jsonc (name: whytype,
+# pages_build_output_dir: ./dist). Canonical domain: whytype.dev.
+# Secret CLOUDFLARE_API_TOKEN must be set on the repo.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Skip (secrets not configured)
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "::notice::CLOUDFLARE_API_TOKEN not set — deploy skipped."
+      - uses: actions/checkout@v4
+        if: env.CLOUDFLARE_API_TOKEN != ''
+      - uses: actions/setup-node@v4
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: env.CLOUDFLARE_API_TOKEN != ''
+      - run: npm run build
+        if: env.CLOUDFLARE_API_TOKEN != ''
+      - name: wrangler pages deploy → Cloudflare
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 4139519922244adc3d4f81646212db78
+          command: pages deploy --branch=main
